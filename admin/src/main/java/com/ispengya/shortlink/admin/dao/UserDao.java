@@ -11,4 +11,9 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class UserDao extends ServiceImpl<UserMapper, User> {
+    public User getUserByUserName(String username) {
+        return lambdaQuery()
+                .eq(User::getUsername,username)
+                .one();
+    }
 }

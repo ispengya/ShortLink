@@ -1,7 +1,6 @@
 package com.ispengya.shortlink.admin.service;
 
-import com.ispengya.shortlink.admin.domain.entity.User;
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.ispengya.shortlink.admin.domain.dto.resp.UserInfoDTO;
 
 /**
 * @author 86151
@@ -10,4 +9,17 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface UserService{
 
+    /**
+     * 根据用户名获取用户信息
+     * @param username
+     * @return
+     */
+    UserInfoDTO getUserByUserName(String username);
+
+    /**
+     * 判断是否存在用户
+     * @param username
+     * @return
+     */
+    boolean hasUser(String username);
 }
