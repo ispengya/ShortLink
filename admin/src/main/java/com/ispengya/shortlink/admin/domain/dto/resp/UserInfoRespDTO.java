@@ -1,5 +1,6 @@
 package com.ispengya.shortlink.admin.domain.dto.resp;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.ispengya.shortlink.admin.service.serializer.PhoneSerializer;
 import com.ispengya.shortlink.admin.service.serializer.RealNameSerializer;
@@ -14,6 +15,7 @@ public class UserInfoRespDTO {
     /**
      * ID
      */
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long id;
 
     /**
