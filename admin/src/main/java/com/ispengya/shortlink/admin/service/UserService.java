@@ -1,7 +1,10 @@
 package com.ispengya.shortlink.admin.service;
 
+import com.ispengya.shortlink.admin.domain.dto.req.UserLoginReqDTO;
 import com.ispengya.shortlink.admin.domain.dto.req.UserRegisterReqDTO;
+import com.ispengya.shortlink.admin.domain.dto.req.UserUpdateReqDTO;
 import com.ispengya.shortlink.admin.domain.dto.resp.UserInfoRespDTO;
+import com.ispengya.shortlink.admin.domain.dto.resp.UserLoginRespDTO;
 
 /**
 * @author 86151
@@ -29,4 +32,18 @@ public interface UserService{
      * @param userRegisterReqDTO
      */
     void register(UserRegisterReqDTO userRegisterReqDTO);
+
+    /**
+     * 修改用户信息
+     * @param userUpdateReqDTO
+     */
+    void updateUserInfo(UserUpdateReqDTO userUpdateReqDTO);
+
+    /**
+     * 登录
+     * @param userLoginReqDTO
+     * @return
+     */
+    UserLoginRespDTO login(UserLoginReqDTO userLoginReqDTO);
+
 }

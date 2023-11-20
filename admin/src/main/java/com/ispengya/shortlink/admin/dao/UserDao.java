@@ -16,4 +16,10 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
                 .eq(User::getUsername,username)
                 .one();
     }
+
+    public void updateByUserName(User update) {
+        lambdaUpdate()
+                .eq(User::getUsername,update.getUsername())
+                .update(update);
+    }
 }
