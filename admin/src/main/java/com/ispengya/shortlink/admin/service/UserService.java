@@ -1,6 +1,7 @@
 package com.ispengya.shortlink.admin.service;
 
-import com.ispengya.shortlink.admin.domain.dto.resp.UserInfoDTO;
+import com.ispengya.shortlink.admin.domain.dto.req.UserRegisterReqDTO;
+import com.ispengya.shortlink.admin.domain.dto.resp.UserInfoRespDTO;
 
 /**
 * @author 86151
@@ -14,12 +15,18 @@ public interface UserService{
      * @param username
      * @return
      */
-    UserInfoDTO getUserByUserName(String username);
+    UserInfoRespDTO getUserByUserName(String username);
 
     /**
-     * 判断是否存在用户
+     * 判断是否存在用户名
      * @param username
      * @return
      */
-    boolean hasUser(String username);
+    boolean hasUserName(String username);
+
+    /**
+     * 用户注册
+     * @param userRegisterReqDTO
+     */
+    void register(UserRegisterReqDTO userRegisterReqDTO);
 }

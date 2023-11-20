@@ -11,6 +11,7 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -40,7 +41,17 @@ public class GlobalExceptionHandler {
                 .map(FieldError::getDefaultMessage)
                 .orElse(StrUtil.EMPTY);
         log.error("[{}] {} [ex] {}", request.getMethod(), getUrl(request), exceptionStr);
-        return Results.failure(BaseErrorCode.CLIENT_ERROR.code(), exceptionStr);
+        return Results.failure(BaseErrorCode.SERVICE_PARAM_ERROR.code(), exceptionStr);
+    }
+
+    @SneakyThrows
+    @ExceptionHandler(value = BindException.class)
+    public Result bindException(HttpServletRequest request, MethodArgumentNotValidException ex) {
+        StringBuilder errorMsg = new StringBuilder();
+        ex.getBindingResult().getFieldErrors().forEach(x -> errorMsg.append(x.getField()).append(x.getDefaultMessage()).append(","));
+        String message = errorMsg.toString();
+        log.error("[{}] {} [ex] {}", request.getMethod(), getUrl(request), message);
+        return Results.failure(BaseErrorCode.SERVICE_PARAM_ERROR.code(), message);
     }
 
     /**
@@ -48,11 +59,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(value = {AbstractException.class})
     public Result abstractException(HttpServletRequest request, AbstractException ex) {
-        if (ex.getCause() != null) {
-            log.error("[{}] {} [ex] {}", request.getMethod(), request.getRequestURL().toString(), ex.toString(), ex.getCause());
-            return Results.failure(ex);
-        }
-        log.error("[{}] {} [ex] {}", request.getMethod(), request.getRequestURL().toString(), ex.toString());
+        log.error("[{}] {} [reason] {}", request.getMethod(), request.getRequestURL().toString(),ex.getErrorMessage());
         return Results.failure(ex);
     }
 

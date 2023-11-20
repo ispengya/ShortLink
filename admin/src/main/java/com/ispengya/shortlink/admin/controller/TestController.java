@@ -1,8 +1,14 @@
 package com.ispengya.shortlink.admin.controller;
 
+import com.ispengya.shortlink.admin.domain.dto.req.UserRegisterReqDTO;
 import com.ispengya.shortlink.common.result.Result;
-import org.springframework.web.bind.annotation.GetMapping;
+import com.ispengya.shortlink.common.result.Results;
+import com.ispengya.shortlink.common.util.AssertUtil;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
 
 /**
  * @author ispengya
@@ -11,8 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class TestController {
 
-    @GetMapping("/test")
-    public Result test(){
-        throw new RuntimeException("测试使用");
+    @PostMapping("/test")
+    public Result test( @Valid @RequestBody UserRegisterReqDTO userRegisterReqDTO){
+        System.out.println(userRegisterReqDTO);
+        AssertUtil.hasText(" ","dddddd");
+        return Results.success();
     }
 }
