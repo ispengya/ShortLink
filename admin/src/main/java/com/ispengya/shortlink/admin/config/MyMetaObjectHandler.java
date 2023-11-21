@@ -11,7 +11,7 @@ import java.util.Date;
  * @date 2023/11/20 16:46
  */
 @Configuration
-public class UserMetaObjectHandler implements MetaObjectHandler {
+public class MyMetaObjectHandler implements MetaObjectHandler {
     @Override
     public void insertFill(MetaObject metaObject) {
         this.strictInsertFill(metaObject,"createTime",Date::new,Date.class);

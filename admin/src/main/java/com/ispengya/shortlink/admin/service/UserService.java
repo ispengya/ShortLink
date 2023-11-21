@@ -46,4 +46,17 @@ public interface UserService{
      */
     UserLoginRespDTO login(UserLoginReqDTO userLoginReqDTO);
 
+    /**
+     * 登出
+     * @param username
+     * @param token
+     */
+    void logout(String username, String token);
+
+    /**
+     * 检测是否登录
+     * @param username
+     * @return
+     */
+    Boolean checkLogin(String username);
 }

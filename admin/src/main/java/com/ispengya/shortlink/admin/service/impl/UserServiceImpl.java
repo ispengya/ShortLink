@@ -98,6 +98,17 @@ public class UserServiceImpl implements UserService{
         RedisUtils.set(RedisConstant.USER_LOGIN_TOKEN_PRE_KEY+userLoginReqDTO.getUsername(),token, TOKEN_TIMEOUT, TimeUnit.MINUTES);
         return new UserLoginRespDTO(token);
     }
+
+    @Override
+    public void logout(String username, String token) {
+        //清楚redis
+        RedisUtils.del(RedisConstant.USER_LOGIN_TOKEN_PRE_KEY+username);
+    }
+
+    @Override
+    public Boolean checkLogin(String username) {
+        return RedisUtils.hasKey(RedisConstant.USER_LOGIN_TOKEN_PRE_KEY+username);
+    }
 }
 
 

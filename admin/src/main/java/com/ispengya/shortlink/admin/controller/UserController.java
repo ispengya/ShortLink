@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
  * @date 2023/11/16 16:50
  */
 @RestController
-@RequestMapping("/shortlink/admin/")
+@RequestMapping("/api/short-link/admin")
 @RequiredArgsConstructor
 public class UserController {
 
@@ -27,7 +27,7 @@ public class UserController {
     /**
      * 获取用户信息
      */
-    @GetMapping("userInfo/{username}")
+    @GetMapping("/auth/userInfo/{username}")
     public Result<UserInfoRespDTO> getUserByName(@PathVariable("username") String username) {
         UserInfoRespDTO userInfoRespDTO = userService.getUserByUserName(username);
         return Results.success(userInfoRespDTO);
@@ -36,7 +36,7 @@ public class UserController {
     /**
      * 注册用户
      */
-    @PostMapping("register")
+    @PostMapping("/auth/register")
     public Result<Void> register(@RequestBody @Valid UserRegisterReqDTO userRegisterReqDTO) {
         userService.register(userRegisterReqDTO);
         return Results.success();
@@ -45,7 +45,7 @@ public class UserController {
     /**
      * 修改个人信息
      */
-    @PutMapping("userInfo")
+    @PutMapping("/auth/admin/userInfo")
     public Result<Void> update(@RequestBody UserUpdateReqDTO userUpdateReqDTO) {
         userService.updateUserInfo(userUpdateReqDTO);
         return Results.success();
@@ -58,6 +58,24 @@ public class UserController {
     public Result<UserLoginRespDTO> login(@RequestBody @Valid UserLoginReqDTO userLoginReqDTO) {
         UserLoginRespDTO userLoginRespDTO = userService.login(userLoginReqDTO);
         return Results.success(userLoginRespDTO);
+    }
+
+    /**
+     * 登出
+     */
+    @GetMapping("logout")
+    public Result<Void> logout(@RequestParam("username") String username, @RequestParam("token") String token) {
+        userService.logout(username, token);
+        return Results.success();
+    }
+
+    /**
+     * 判断用户是否登录
+     */
+    @GetMapping("/isLogin")
+    public Result<Boolean> isLogin(@RequestParam("username") String username) {
+        Boolean isLogin = userService.checkLogin(username);
+        return Results.success(isLogin);
     }
 
 
