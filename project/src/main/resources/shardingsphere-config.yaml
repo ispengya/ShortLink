@@ -1,0 +1,26 @@
+dataSources:
+  ds_0:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://127.0.0.1:13306/link?useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 1234
+
+rules:
+  - !SHARDING
+    tables:
+      t_link:
+        actualDataNodes: ds_0.t_link_${0..5}
+        tableStrategy:
+          complex:
+            shardingColumns: gid,username
+            shardingAlgorithmName: link_table_complex_mod
+    shardingAlgorithms:
+      link_table_complex_mod:
+        type: CLASS_BASED
+        props:
+          algorithmClassName: com.ispengya.shortlink.project.common.shard.LinkCommonTableComplexAlgorithm
+          table-sharding-count: 6
+          strategy: complex
+props:
+  sql-show: true

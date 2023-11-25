@@ -1,2 +1,15 @@
 server:
   port: 8001
+
+spring:
+  datasource:
+    driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
+    url: jdbc:shardingsphere:classpath:shardingsphere-config.yaml
+
+  data:
+    ##############redis#################
+    redis:
+      host: 8.130.99.203
+      port: 6336
+      password: 123456
+      database: 2

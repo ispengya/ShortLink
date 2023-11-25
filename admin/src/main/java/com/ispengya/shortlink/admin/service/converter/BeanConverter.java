@@ -16,6 +16,7 @@ import org.mapstruct.factory.Mappers;
 @Mapper
 public interface BeanConverter {
     BeanConverter CONVERTER = Mappers.getMapper(BeanConverter.class);
+
     UserInfoRespDTO converterUserInfo(User user);
 
     User converterUser1(UserRegisterReqDTO userRegisterReqDTO);

@@ -1,12 +1,11 @@
 package com.ispengya.shortlink.admin.controller;
 
-import com.ispengya.shortlink.admin.domain.dto.req.UserRegisterReqDTO;
+import com.ispengya.shortlink.admin.dao.GroupDao;
+import com.ispengya.shortlink.admin.domain.entity.Group;
 import com.ispengya.shortlink.common.result.Result;
 import com.ispengya.shortlink.common.result.Results;
-import com.ispengya.shortlink.common.util.AssertUtil;
-import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 
@@ -16,11 +15,12 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 public class TestController {
+    @Autowired
+    GroupDao groupDao;
 
-    @PostMapping("/test")
-    public Result test( @Valid @RequestBody UserRegisterReqDTO userRegisterReqDTO){
-        System.out.println(userRegisterReqDTO);
-        AssertUtil.hasText(" ","dddddd");
-        return Results.success();
+    @GetMapping("/test")
+    public Result<Group> test(){
+        Group groupByGIdAndUserName = groupDao.getGroupByGIdAndUserName("ispengya", "ukyu2h");
+        return Results.success(groupByGIdAndUserName);
     }
 }
