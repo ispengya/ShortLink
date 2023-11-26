@@ -1,5 +1,6 @@
 package com.ispengya.shortlink.admin.service.impl;
 
+import com.ispengya.shortlink.admin.common.event.UserRegisterEvent;
 import com.ispengya.shortlink.admin.dao.UserDao;
 import com.ispengya.shortlink.admin.domain.dto.req.UserLoginReqDTO;
 import com.ispengya.shortlink.admin.domain.dto.req.UserRegisterReqDTO;
@@ -20,7 +21,9 @@ import lombok.RequiredArgsConstructor;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -38,6 +41,7 @@ public class UserServiceImpl implements UserService{
     private final UserDao userDao;
     private final RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
     private final RedissonClient redissonClient;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Override
     public UserInfoRespDTO getUserByUserName(String username) {
@@ -54,6 +58,7 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
+    @Transactional
     public void register(UserRegisterReqDTO userRegisterReqDTO) {
         AssertUtil.isFalse(hasUserName(userRegisterReqDTO.getUsername()),"用户名已经存在");
         //加锁
@@ -67,6 +72,8 @@ public class UserServiceImpl implements UserService{
                 }
                 //存入布隆过滤器
                 userRegisterCachePenetrationBloomFilter.add(userRegisterReqDTO.getUsername());
+                //创建默认分组
+                applicationEventPublisher.publishEvent(new UserRegisterEvent(this,insert.getUsername()));
             } catch (ServiceException e) {
                 throw new ServiceException(BaseErrorCode.USER_REGISTER_ERROR);
             } finally {
