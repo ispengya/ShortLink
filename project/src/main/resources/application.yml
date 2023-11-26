@@ -1,6 +1,9 @@
 server:
   port: 8001
 
+official:
+  domain: gfrpz1015.icu
+
 spring:
   datasource:
     driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver

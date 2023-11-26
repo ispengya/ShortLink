@@ -7,24 +7,10 @@ import java.util.Date;
 
 /**
  * @author ispengya
- * @date 2023/11/25 14:26
+ * @date 2023/11/26 16:25
  */
 @Data
-public class ShortLinkCreateReqDTO {
-    /**
-     * 域名,默认或者自己的域名
-     */
-    private String domain;
-
-    /**
-     * 原始链接
-     */
-    private String originUrl;
-
-    /**
-     * 分组标识
-     */
-    private String gid;
+public class ShortLinkUpdateReqDTO {
 
     /**
      * 用户名
@@ -32,9 +18,19 @@ public class ShortLinkCreateReqDTO {
     private String username;
 
     /**
-     * 创建类型 0：接口创建 1：控制台创建
+     * 原始链接
      */
-    private Integer createdType;
+    private String originUrl;
+
+    /**
+     * 完整短链接
+     */
+    private String fullShortUrl;
+
+    /**
+     * 分组标识
+     */
+    private String gid;
 
     /**
      * 有效期类型 0：永久有效 1：自定义

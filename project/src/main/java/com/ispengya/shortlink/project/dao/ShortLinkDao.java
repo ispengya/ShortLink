@@ -9,7 +9,7 @@ import com.ispengya.shortlink.project.domain.dto.req.ShortLinkPageReq;
 import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.ispengya.shortlink.project.domain.eneity.ShortLink;
 import com.ispengya.shortlink.project.mapper.ShortLinkMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -19,19 +19,12 @@ import java.util.List;
  * @date 2023/11/25 14:17
  */
 @Repository
+@RequiredArgsConstructor
 public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLink> {
 
-    @Autowired
-    private ShortLinkMapper shortLinkMapper;
+    private final ShortLinkMapper shortLinkMapper;
 
 
-
-    public List<ShortLink> get() {
-        return lambdaQuery()
-                .eq(ShortLink::getUsername, "ispengya")
-                .eq(ShortLink::getGid, "test")
-                .list();
-    }
 
     public IPage<ShortLink> pageLink(ShortLinkPageReq shortLinkPageReq) {
         IPage<ShortLink> page = new Page<>(shortLinkPageReq.getCurrent(), shortLinkPageReq.getPageSize());
@@ -45,5 +38,23 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLink> {
 
     public List<ShortLinkGroupCountQueryRespDTO> getGroupLinkCount(List<String> requestParam, String username) {
         return shortLinkMapper.getGroupLinkCount(requestParam, username);
+    }
+
+    public ShortLink getOneByConditions(String username, String fullShortUrl) {
+        return lambdaQuery()
+                .eq(ShortLink::getUsername,username)
+                .eq(ShortLink::getFullShortUrl,fullShortUrl)
+                .eq(ShortLink::getEnableStatus,YesOrNoEnum.YES.getCode())
+                .eq(ShortLink::getDelFlag,YesOrNoEnum.YES.getCode())
+                .one();
+    }
+
+    public void updateByConditions(ShortLink oldLink) {
+        lambdaUpdate()
+                .eq(ShortLink::getUsername,oldLink.getUsername())
+                .eq(ShortLink::getFullShortUrl,oldLink.getFullShortUrl())
+                .eq(ShortLink::getEnableStatus,YesOrNoEnum.YES.getCode())
+                .eq(ShortLink::getDelFlag,YesOrNoEnum.YES.getCode())
+                .update(oldLink);
     }
 }

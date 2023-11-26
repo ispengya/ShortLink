@@ -4,10 +4,12 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.text.StrBuilder;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.ispengya.shortlink.common.exception.ServiceException;
+import com.ispengya.shortlink.common.util.AssertUtil;
 import com.ispengya.shortlink.project.common.util.HashUtil;
 import com.ispengya.shortlink.project.dao.ShortLinkDao;
 import com.ispengya.shortlink.project.domain.dto.req.ShortLinkCreateReqDTO;
 import com.ispengya.shortlink.project.domain.dto.req.ShortLinkPageReq;
+import com.ispengya.shortlink.project.domain.dto.req.ShortLinkUpdateReqDTO;
 import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkCreateRespDTO;
 import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkRespDTO;
@@ -18,6 +20,7 @@ import com.ispengya.shortlink.project.service.converter.ShortLinkConverter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBloomFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +38,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ShortLinkServiceImpl implements ShortLinkService {
 
+    @Value("${official.domain}")
+    private String officialDomain;
+
     private final ShortLinkDao shortLinkDao;
     private final RBloomFilter<String> shortUriCreateCachePenetrationBloomFilter;
 
@@ -51,6 +57,12 @@ public class ShortLinkServiceImpl implements ShortLinkService {
         //构建实体
         ShortLink shortLink = ShortLinkConverter.buildShortLink(shortUri, fullShortUrl, shortLinkCreateReqDTO, shortLinkCreateReqDTO.getUsername(), favicon);
         try {
+            //判断domain是否是自定义的
+            if (shortLinkCreateReqDTO.getDomain().equals(officialDomain)){
+                shortLink.setFullShortUrl("https://"+shortLink.getFullShortUrl());
+            }else {
+                shortLink.setFullShortUrl("http://"+shortLink.getFullShortUrl());
+            }
             shortLinkDao.save(shortLink);
         } catch (DuplicateKeyException ex) {
             log.warn("短链接：{} 重复入库", fullShortUrl);
@@ -63,6 +75,19 @@ public class ShortLinkServiceImpl implements ShortLinkService {
                 .originUrl(shortLinkCreateReqDTO.getOriginUrl())
                 .gid(shortLinkCreateReqDTO.getGid())
                 .build();
+    }
+
+    @Override
+    public void updateShortLink(ShortLinkUpdateReqDTO shortLinkUpdateReqDTO) {
+        //查询更改的短链接
+        ShortLink oldLink = shortLinkDao.getOneByConditions(shortLinkUpdateReqDTO.getUsername(),shortLinkUpdateReqDTO.getFullShortUrl());
+        AssertUtil.notNull(oldLink,"短链接不存在");
+        oldLink.setGid(shortLinkUpdateReqDTO.getGid());
+        oldLink.setDescribe(shortLinkUpdateReqDTO.getDescribe());
+        oldLink.setOriginUrl(shortLinkUpdateReqDTO.getOriginUrl());
+        oldLink.setValidDateType(shortLinkUpdateReqDTO.getValidDateType());
+        oldLink.setValidDate(shortLinkUpdateReqDTO.getValidDate());
+        shortLinkDao.updateByConditions(oldLink);
     }
 
     @Override
@@ -80,7 +105,7 @@ public class ShortLinkServiceImpl implements ShortLinkService {
     @Override
     public List<ShortLinkGroupCountQueryRespDTO> listGroupLinkCount(List<String> requestParam, String username) {
         //查询gid对应数量
-        return shortLinkDao.getGroupLinkCount(requestParam,username);
+        return shortLinkDao.getGroupLinkCount(requestParam, username);
     }
 
     public String generateSuffix(ShortLinkCreateReqDTO dto) {
@@ -94,7 +119,7 @@ public class ShortLinkServiceImpl implements ShortLinkService {
             String originUrl = dto.getOriginUrl();
             originUrl += System.currentTimeMillis();
             shorUri = HashUtil.hashToBase62(originUrl);
-            if (!shortUriCreateCachePenetrationBloomFilter.contains(shorUri)) {
+            if (!shortUriCreateCachePenetrationBloomFilter.contains(dto.getDomain()+"/"+shorUri)) {
                 break;
             }
             customGenerateCount++;

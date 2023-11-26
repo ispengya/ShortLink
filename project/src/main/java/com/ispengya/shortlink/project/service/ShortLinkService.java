@@ -2,6 +2,7 @@ package com.ispengya.shortlink.project.service;
 
 import com.ispengya.shortlink.project.domain.dto.req.ShortLinkCreateReqDTO;
 import com.ispengya.shortlink.project.domain.dto.req.ShortLinkPageReq;
+import com.ispengya.shortlink.project.domain.dto.req.ShortLinkUpdateReqDTO;
 import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkCreateRespDTO;
 import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkRespDTO;
@@ -19,6 +20,12 @@ public interface ShortLinkService {
      * @return
      */
     ShortLinkCreateRespDTO createLink(ShortLinkCreateReqDTO shortLinkCreateReqDTO);
+
+    /**
+     * 修改短链接
+     * @param shortLinkUpdateReqDTO
+     */
+    void updateShortLink(ShortLinkUpdateReqDTO shortLinkUpdateReqDTO);
 
     /**
      * 分页查询短链接

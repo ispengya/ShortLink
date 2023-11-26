@@ -4,6 +4,7 @@ import com.ispengya.shortlink.common.result.Result;
 import com.ispengya.shortlink.common.result.Results;
 import com.ispengya.shortlink.project.domain.dto.req.ShortLinkCreateReqDTO;
 import com.ispengya.shortlink.project.domain.dto.req.ShortLinkPageReq;
+import com.ispengya.shortlink.project.domain.dto.req.ShortLinkUpdateReqDTO;
 import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkCreateRespDTO;
 import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkRespDTO;
@@ -33,6 +34,15 @@ public class ShortLinkController {
     public Result<ShortLinkCreateRespDTO> createLink(@Valid @RequestBody ShortLinkCreateReqDTO shortLinkCreateReqDTO) {
         ShortLinkCreateRespDTO shortLinkCreateRespDTO = shortLinkService.createLink(shortLinkCreateReqDTO);
         return Results.success(shortLinkCreateRespDTO);
+    }
+
+    /**
+     * 修改短链接
+     */
+    @PutMapping("/auth/link")
+    public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO shortLinkUpdateReqDTO){
+        shortLinkService.updateShortLink(shortLinkUpdateReqDTO);
+        return Results.success();
     }
 
     /**
