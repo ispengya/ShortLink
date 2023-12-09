@@ -1,6 +1,7 @@
 package com.ispengya.shortlink.project.service.converter;
 
 import com.ispengya.shortlink.project.domain.dto.req.ShortLinkCreateReqDTO;
+import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkCreateRespDTO;
 import com.ispengya.shortlink.project.domain.eneity.ShortLink;
 
 /**
@@ -29,5 +30,21 @@ public class ShortLinkConverter {
                 .fullShortUrl(fullShortUrl)
                 .favicon(favicon)
                 .build();
+    }
+
+    public static ShortLinkCreateRespDTO buildShortLinkCreateResp(ShortLink shortLink,String officialDomain) {
+        ShortLinkCreateRespDTO shortLinkCreateRespDTO = ShortLinkCreateRespDTO.builder()
+                .fullShortUrl(shortLink.getFullShortUrl())
+                .originUrl(shortLink.getOriginUrl())
+                .gid(shortLink.getGid())
+                .build();
+        //判断domain是否是自定义的
+        if (shortLink.getDomain().equals(officialDomain)) {
+            //TODO 真正上线是https
+            shortLinkCreateRespDTO.setFullShortUrl("http://" + shortLink.getFullShortUrl());
+        } else {
+            shortLinkCreateRespDTO.setFullShortUrl("http://" + shortLink.getFullShortUrl());
+        }
+        return shortLinkCreateRespDTO;
     }
 }

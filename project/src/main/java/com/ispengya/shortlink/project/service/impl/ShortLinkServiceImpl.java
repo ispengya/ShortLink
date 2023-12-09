@@ -111,7 +111,8 @@ public class ShortLinkServiceImpl implements ShortLinkService {
                 );
                 ((HttpServletResponse) response).sendRedirect(shortLink.getOriginUrl());
             } else {
-                stringRedisTemplate.opsForValue().set(LINK_GOTO_PRE_KEY + fullShortUrl, shortLink.getOriginUrl());
+                //在缓存过期默认一个月
+                stringRedisTemplate.opsForValue().set(LINK_GOTO_PRE_KEY + fullShortUrl, shortLink.getOriginUrl(),ShortLinkConstant.DEFAULT_CACHE_VALID_TIME,TimeUnit.SECONDS);
                 ((HttpServletResponse) response).sendRedirect(shortLink.getOriginUrl());
             }
         } finally {
@@ -134,13 +135,6 @@ public class ShortLinkServiceImpl implements ShortLinkService {
         //构建路由表实体
         ShortLinkGoto shortLinkGoto = ShortLinkGoto.builder().username(shortLinkCreateReqDTO.getUsername()).gid(shortLinkCreateReqDTO.getGid()).fullShortUrl(shortLink.getFullShortUrl()).build();
         try {
-            //判断domain是否是自定义的
-            if (shortLinkCreateReqDTO.getDomain().equals(officialDomain)) {
-                //TODO 真正上线是https
-                shortLink.setFullShortUrl("http://" + shortLink.getFullShortUrl());
-            } else {
-                shortLink.setFullShortUrl("http://" + shortLink.getFullShortUrl());
-            }
             shortLinkDao.save(shortLink);
             shortLinkGoToDao.save(shortLinkGoto);
         } catch (DuplicateKeyException ex) {
@@ -157,11 +151,7 @@ public class ShortLinkServiceImpl implements ShortLinkService {
             seconds = LinkUtil.getLinkCacheValidTime(shortLink.getValidDate());
         }
         stringRedisTemplate.opsForValue().set(LINK_GOTO_PRE_KEY + fullShortUrl, shortLinkCreateReqDTO.getOriginUrl(), seconds, TimeUnit.SECONDS);
-        return ShortLinkCreateRespDTO.builder()
-                .fullShortUrl(shortLink.getFullShortUrl())
-                .originUrl(shortLinkCreateReqDTO.getOriginUrl())
-                .gid(shortLinkCreateReqDTO.getGid())
-                .build();
+        return ShortLinkConverter.buildShortLinkCreateResp(shortLink,officialDomain);
     }
 
     @Override
@@ -183,7 +173,17 @@ public class ShortLinkServiceImpl implements ShortLinkService {
         List<ShortLink> links = Optional.ofNullable(linkPage).map(IPage::getRecords).get();
         if (CollUtil.isNotEmpty(links)) {
             return links.stream()
-                    .map(BeanConverter.CONVERTER::converterLink1)
+                    .map(shortLink -> {
+                        ShortLinkRespDTO shortLinkRespDTO = BeanConverter.CONVERTER.converterLink1(shortLink);
+                        //判断domain是否是自定义的
+                        if (shortLink.getDomain().equals(officialDomain)) {
+                            //TODO 真正上线是https
+                            shortLinkRespDTO.setFullShortUrl("http://" + shortLink.getFullShortUrl());
+                        } else {
+                            shortLinkRespDTO.setFullShortUrl("http://" + shortLink.getFullShortUrl());
+                        }
+                        return shortLinkRespDTO;
+                    })
                     .collect(Collectors.toList());
         }
         return Collections.EMPTY_LIST;

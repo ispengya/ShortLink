@@ -5,7 +5,9 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ispengya.shortlink.common.enums.YesOrNoEnum;
+import com.ispengya.shortlink.project.domain.dto.req.RecycleBinRemoveReqDTO;
 import com.ispengya.shortlink.project.domain.dto.req.ShortLinkPageReq;
+import com.ispengya.shortlink.project.domain.dto.req.RecycleBinPageReqDTO;
 import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.ispengya.shortlink.project.domain.eneity.ShortLink;
 import com.ispengya.shortlink.project.mapper.ShortLinkMapper;
@@ -25,13 +27,13 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLink> {
     private final ShortLinkMapper shortLinkMapper;
 
 
-
     public IPage<ShortLink> pageLink(ShortLinkPageReq shortLinkPageReq) {
         IPage<ShortLink> page = new Page<>(shortLinkPageReq.getCurrent(), shortLinkPageReq.getPageSize());
         LambdaQueryWrapper<ShortLink> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ShortLink::getGid, shortLinkPageReq.getGid());
         queryWrapper.eq(ShortLink::getUsername, shortLinkPageReq.getUsername());
         queryWrapper.eq(ShortLink::getEnableStatus, YesOrNoEnum.YES.getCode());
+        queryWrapper.eq(ShortLink::getDelFlag, YesOrNoEnum.YES.getCode());
         IPage<ShortLink> shortLinkIPage = baseMapper.selectPage(page, queryWrapper);
         return shortLinkIPage;
     }
@@ -49,6 +51,15 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLink> {
                 .one();
     }
 
+    public ShortLink getOneInRecycle(String username, String fullShortUrl) {
+        return lambdaQuery()
+                .eq(ShortLink::getUsername,username)
+                .eq(ShortLink::getFullShortUrl,fullShortUrl)
+                .eq(ShortLink::getEnableStatus,YesOrNoEnum.NO.getCode())
+                .eq(ShortLink::getDelFlag,YesOrNoEnum.YES.getCode())
+                .one();
+    }
+
     public void updateByConditions(ShortLink oldLink) {
         lambdaUpdate()
                 .eq(ShortLink::getUsername,oldLink.getUsername())
@@ -56,5 +67,32 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLink> {
                 .eq(ShortLink::getEnableStatus,YesOrNoEnum.YES.getCode())
                 .eq(ShortLink::getDelFlag,YesOrNoEnum.YES.getCode())
                 .update(oldLink);
+    }
+
+    public void recoverInRecycle(ShortLink oldLink) {
+        lambdaUpdate()
+                .eq(ShortLink::getUsername,oldLink.getUsername())
+                .eq(ShortLink::getFullShortUrl,oldLink.getFullShortUrl())
+                .eq(ShortLink::getDelFlag,YesOrNoEnum.YES.getCode())
+                .update(oldLink);
+    }
+
+    public IPage<ShortLink> pageRecycleOfLink(RecycleBinPageReqDTO reqDTO) {
+        IPage<ShortLink> page = new Page<>(reqDTO.getCurrent(), reqDTO.getPageSize());
+        LambdaQueryWrapper<ShortLink> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ShortLink::getUsername, reqDTO.getUsername());
+        queryWrapper.eq(ShortLink::getEnableStatus, YesOrNoEnum.NO.getCode());
+        queryWrapper.eq(ShortLink::getDelFlag, YesOrNoEnum.YES.getCode());
+        IPage<ShortLink> shortLinkIPage = baseMapper.selectPage(page, queryWrapper);
+        return shortLinkIPage;
+    }
+
+    public void removeByConditions(RecycleBinRemoveReqDTO reqDTO) {
+        lambdaUpdate()
+                .eq(ShortLink::getUsername,reqDTO.getUsername())
+                .eq(ShortLink::getFullShortUrl,reqDTO.getFullShortUrl())
+                .set(ShortLink::getEnableStatus,YesOrNoEnum.NO.getCode())
+                .set(ShortLink::getDelFlag,YesOrNoEnum.NO.getCode())
+                .update();
     }
 }
