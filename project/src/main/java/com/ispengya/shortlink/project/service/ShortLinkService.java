@@ -6,7 +6,10 @@ import com.ispengya.shortlink.project.domain.dto.req.ShortLinkUpdateReqDTO;
 import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkCreateRespDTO;
 import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkRespDTO;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -14,6 +17,14 @@ import java.util.List;
  * @date 2023/11/25 14:19
  */
 public interface ShortLinkService {
+    /**
+     * 短链接跳转
+     * @param shortUri
+     * @param request
+     * @param response
+     */
+    void jumpUrl(String shortUri, ServletRequest request, ServletResponse response) throws IOException;
+
     /**
      * 创建短链接
      * @param shortLinkCreateReqDTO

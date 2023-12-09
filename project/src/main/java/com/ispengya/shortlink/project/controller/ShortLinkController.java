@@ -9,8 +9,11 @@ import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkCreateRespDTO;
 import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkRespDTO;
 import com.ispengya.shortlink.project.service.ShortLinkService;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -22,15 +25,24 @@ import java.util.List;
  */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/short-link/project")
 public class ShortLinkController {
 
     private final ShortLinkService shortLinkService;
 
+
+    /**
+     * 短链接跳转原始链接
+     */
+    @GetMapping("/{short-uri}")
+    @SneakyThrows
+    public void restoreUrl(@PathVariable("short-uri") String shortUri, ServletRequest request, ServletResponse response) {
+        shortLinkService.jumpUrl(shortUri, request, response);
+    }
+
     /**
      * 新增短链接
      */
-    @PostMapping("/auth/link")
+    @PostMapping("/api/short-link/project/auth/link")
     public Result<ShortLinkCreateRespDTO> createLink(@Valid @RequestBody ShortLinkCreateReqDTO shortLinkCreateReqDTO) {
         ShortLinkCreateRespDTO shortLinkCreateRespDTO = shortLinkService.createLink(shortLinkCreateReqDTO);
         return Results.success(shortLinkCreateRespDTO);
@@ -39,7 +51,7 @@ public class ShortLinkController {
     /**
      * 修改短链接
      */
-    @PutMapping("/auth/link")
+    @PutMapping("/api/short-link/project/auth/link")
     public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO shortLinkUpdateReqDTO){
         shortLinkService.updateShortLink(shortLinkUpdateReqDTO);
         return Results.success();
@@ -48,7 +60,7 @@ public class ShortLinkController {
     /**
      * 分页查询短链接
      */
-    @GetMapping("/auth/page/link")
+    @GetMapping("/api/short-link/project/auth/page/link")
     public Result<List<ShortLinkRespDTO>> pageLink(ShortLinkPageReq shortLinkPageReq) {
         List<ShortLinkRespDTO> list = shortLinkService.pageLink(shortLinkPageReq);
         return Results.success(list);
@@ -57,7 +69,7 @@ public class ShortLinkController {
     /**
      * 查寻分组下的短链接数量
      */
-    @GetMapping("/auth/page/linkCount")
+    @GetMapping("/api/short-link/project/auth/page/linkCount")
     public Result<List<ShortLinkGroupCountQueryRespDTO>> listGroupLinkCount(@RequestParam("gid") String[] gid, @RequestParam("username") String username) {
         List<String> list = Arrays.asList(gid);
         List<ShortLinkGroupCountQueryRespDTO> dtoList = shortLinkService.listGroupLinkCount(list, username);

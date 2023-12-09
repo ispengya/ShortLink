@@ -15,6 +15,13 @@ rules:
           complex:
             shardingColumns: gid,username
             shardingAlgorithmName: link_table_complex_mod
+      t_link_goto:
+        actualDataNodes: ds_0.t_link_goto_${0..5}
+        tableStrategy:
+          standard:
+            shardingColumn: full_short_url
+            shardingAlgorithmName: link_goto_table_hash_mod
+
     shardingAlgorithms:
       link_table_complex_mod:
         type: CLASS_BASED
@@ -22,5 +29,9 @@ rules:
           algorithmClassName: com.ispengya.shortlink.project.common.shard.LinkCommonTableComplexAlgorithm
           table-sharding-count: 6
           strategy: complex
+      link_goto_table_hash_mod:
+        type: HASH_MOD
+        props:
+          sharding-count: 6
 props:
   sql-show: true

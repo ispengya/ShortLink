@@ -102,19 +102,19 @@ public class UserServiceImpl implements UserService{
         //生成token
         String token = JwtUtils.createToken(loginUser.getUsername());
         //存入Redis
-        RedisUtils.set(RedisConstant.USER_LOGIN_TOKEN_PRE_KEY+userLoginReqDTO.getUsername(),token, TOKEN_TIMEOUT, TimeUnit.MINUTES);
+        RedisUtils.set(RedisConstant.ADMIN_LOGIN_TOKEN_PRE_KEY +userLoginReqDTO.getUsername(),token, TOKEN_TIMEOUT, TimeUnit.MINUTES);
         return new UserLoginRespDTO(token);
     }
 
     @Override
     public void logout(String username, String token) {
         //清楚redis
-        RedisUtils.del(RedisConstant.USER_LOGIN_TOKEN_PRE_KEY+username);
+        RedisUtils.del(RedisConstant.ADMIN_LOGIN_TOKEN_PRE_KEY +username);
     }
 
     @Override
     public Boolean checkLogin(String username) {
-        return RedisUtils.hasKey(RedisConstant.USER_LOGIN_TOKEN_PRE_KEY+username);
+        return RedisUtils.hasKey(RedisConstant.ADMIN_LOGIN_TOKEN_PRE_KEY +username);
     }
 }
 

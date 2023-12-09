@@ -2,13 +2,16 @@ server:
   port: 8001
 
 official:
-  domain: gfrpz1015.icu
+  domain: url.cn
 
 spring:
   datasource:
     driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
     url: jdbc:shardingsphere:classpath:shardingsphere-config.yaml
-
+  mvc:
+    view:
+      prefix: /templates/
+      suffix: .html
   data:
     ##############redis#################
     redis:
