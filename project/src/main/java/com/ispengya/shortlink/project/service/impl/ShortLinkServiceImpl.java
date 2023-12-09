@@ -59,6 +59,7 @@ public class ShortLinkServiceImpl implements ShortLinkService {
     private final RBloomFilter<String> shortUriCreateCachePenetrationBloomFilter;
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
+    private final UrlService urlService;
 
     @Override
     @SneakyThrows
@@ -128,8 +129,8 @@ public class ShortLinkServiceImpl implements ShortLinkService {
                 .append("/")
                 .append(shortUri)
                 .toString();
-        //TODO
-        String favicon = "test";
+        //获取favicon
+        String favicon = urlService.getFavicon(shortLinkCreateReqDTO.getOriginUrl());
         //构建实体
         ShortLink shortLink = ShortLinkConverter.buildShortLink(shortUri, fullShortUrl, shortLinkCreateReqDTO, shortLinkCreateReqDTO.getUsername(), favicon);
         //构建路由表实体
