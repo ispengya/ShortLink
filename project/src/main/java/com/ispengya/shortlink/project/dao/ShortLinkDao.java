@@ -1,13 +1,14 @@
 package com.ispengya.shortlink.project.dao;
 
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ispengya.shortlink.common.enums.YesOrNoEnum;
+import com.ispengya.shortlink.project.domain.dto.req.RecycleBinPageReqDTO;
 import com.ispengya.shortlink.project.domain.dto.req.RecycleBinRemoveReqDTO;
 import com.ispengya.shortlink.project.domain.dto.req.ShortLinkPageReq;
-import com.ispengya.shortlink.project.domain.dto.req.RecycleBinPageReqDTO;
 import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.ispengya.shortlink.project.domain.eneity.ShortLink;
 import com.ispengya.shortlink.project.mapper.ShortLinkMapper;
@@ -45,7 +46,7 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLink> {
     public ShortLink getOneByConditions(String username, String fullShortUrl) {
         return lambdaQuery()
                 .eq(ShortLink::getUsername,username)
-                .eq(ShortLink::getFullShortUrl,fullShortUrl)
+                .eq(ShortLink::getShortUri,getShortUri(fullShortUrl))
                 .eq(ShortLink::getEnableStatus,YesOrNoEnum.YES.getCode())
                 .eq(ShortLink::getDelFlag,YesOrNoEnum.YES.getCode())
                 .one();
@@ -54,7 +55,7 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLink> {
     public ShortLink getOneInRecycle(String username, String fullShortUrl) {
         return lambdaQuery()
                 .eq(ShortLink::getUsername,username)
-                .eq(ShortLink::getFullShortUrl,fullShortUrl)
+                .eq(ShortLink::getShortUri,getShortUri(fullShortUrl))
                 .eq(ShortLink::getEnableStatus,YesOrNoEnum.NO.getCode())
                 .eq(ShortLink::getDelFlag,YesOrNoEnum.YES.getCode())
                 .one();
@@ -63,7 +64,16 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLink> {
     public void updateByConditions(ShortLink oldLink) {
         lambdaUpdate()
                 .eq(ShortLink::getUsername,oldLink.getUsername())
-                .eq(ShortLink::getFullShortUrl,oldLink.getFullShortUrl())
+                .eq(ShortLink::getShortUri,getShortUri(oldLink.getFullShortUrl()))
+                .eq(ShortLink::getEnableStatus,YesOrNoEnum.YES.getCode())
+                .eq(ShortLink::getDelFlag,YesOrNoEnum.YES.getCode())
+                .update(oldLink);
+    }
+
+    public void saveRecycle(ShortLink oldLink) {
+        lambdaUpdate()
+                .eq(ShortLink::getUsername,oldLink.getUsername())
+                .eq(ShortLink::getShortUri,getShortUri(oldLink.getFullShortUrl()))
                 .eq(ShortLink::getEnableStatus,YesOrNoEnum.YES.getCode())
                 .eq(ShortLink::getDelFlag,YesOrNoEnum.YES.getCode())
                 .update(oldLink);
@@ -72,7 +82,7 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLink> {
     public void recoverInRecycle(ShortLink oldLink) {
         lambdaUpdate()
                 .eq(ShortLink::getUsername,oldLink.getUsername())
-                .eq(ShortLink::getFullShortUrl,oldLink.getFullShortUrl())
+                .eq(ShortLink::getShortUri,getShortUri(oldLink.getFullShortUrl()))
                 .eq(ShortLink::getDelFlag,YesOrNoEnum.YES.getCode())
                 .update(oldLink);
     }
@@ -90,9 +100,13 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLink> {
     public void removeByConditions(RecycleBinRemoveReqDTO reqDTO) {
         lambdaUpdate()
                 .eq(ShortLink::getUsername,reqDTO.getUsername())
-                .eq(ShortLink::getFullShortUrl,reqDTO.getFullShortUrl())
+                .eq(ShortLink::getShortUri,getShortUri(reqDTO.getFullShortUrl()))
                 .set(ShortLink::getEnableStatus,YesOrNoEnum.NO.getCode())
                 .set(ShortLink::getDelFlag,YesOrNoEnum.NO.getCode())
                 .update();
+    }
+
+    private String getShortUri(String fullShortUrl){
+        return StrUtil.subAfter(fullShortUrl, '/', true);
     }
 }

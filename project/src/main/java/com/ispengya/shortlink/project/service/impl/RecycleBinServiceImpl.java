@@ -48,7 +48,8 @@ public class RecycleBinServiceImpl implements RecycleBinService {
         //查询到短链接
         ShortLink shortLink = shortLinkDao.getOneByConditions(reqDTO.getUsername(), reqDTO.getFullShortUrl());
         shortLink.setEnableStatus(YesOrNoEnum.NO.getCode());
-        shortLinkDao.updateByConditions(shortLink);
+        shortLink.setUpdateTime(null);
+        shortLinkDao.saveRecycle(shortLink);
         //删除redis缓存
         stringRedisTemplate.delete(RedisConstant.LINK_GOTO_PRE_KEY+reqDTO.getFullShortUrl());
     }
@@ -79,6 +80,8 @@ public class RecycleBinServiceImpl implements RecycleBinService {
     public void recover(RecycleBinRecoverReqDTO reqDTO) {
         ShortLink shortLink = shortLinkDao.getOneInRecycle(reqDTO.getUsername(), reqDTO.getFullShortUrl());
         shortLink.setEnableStatus(YesOrNoEnum.YES.getCode());
+        //否则自动填充更新字段不开启
+        shortLink.setUpdateTime(null);
         shortLinkDao.recoverInRecycle(shortLink);
         //缓存预热和删除缓存空值
         stringRedisTemplate.delete(RedisConstant.LINK_GOTO_IS_NULL_PRE_KEY + reqDTO.getFullShortUrl());

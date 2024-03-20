@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.text.StrBuilder;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.ispengya.shortlink.common.constant.MQConstant;
 import com.ispengya.shortlink.common.exception.ServiceException;
 import com.ispengya.shortlink.common.util.AssertUtil;
 import com.ispengya.shortlink.project.common.constant.ShortLinkConstant;
@@ -12,6 +13,7 @@ import com.ispengya.shortlink.project.common.util.HashUtil;
 import com.ispengya.shortlink.project.common.util.LinkUtil;
 import com.ispengya.shortlink.project.dao.ShortLinkDao;
 import com.ispengya.shortlink.project.dao.ShortLinkGoToDao;
+import com.ispengya.shortlink.project.domain.dto.common.LinkStatsMQDTO;
 import com.ispengya.shortlink.project.domain.dto.req.ShortLinkCreateReqDTO;
 import com.ispengya.shortlink.project.domain.dto.req.ShortLinkPageReq;
 import com.ispengya.shortlink.project.domain.dto.req.ShortLinkUpdateReqDTO;
@@ -23,18 +25,22 @@ import com.ispengya.shortlink.project.domain.eneity.ShortLinkGoto;
 import com.ispengya.shortlink.project.service.ShortLinkService;
 import com.ispengya.shortlink.project.service.converter.BeanConverter;
 import com.ispengya.shortlink.project.service.converter.ShortLinkConverter;
+import com.jd.platform.hotkey.client.callback.JdHotKeyStore;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -60,64 +66,89 @@ public class ShortLinkServiceImpl implements ShortLinkService {
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
     private final UrlService urlService;
+    private final RocketMQTemplate rocketMQTemplate;
 
+    private void setHotKeyOrNull(String key,Object value){
+        boolean isHotKey=JdHotKeyStore.isHotKey(key);
+        if (isHotKey){
+            JdHotKeyStore.smartSet(key,value);
+        }
+    }
     @Override
     @SneakyThrows
     public void jumpUrl(String shortUri, ServletRequest request, ServletResponse response) {
         String serverName = request.getServerName();
         String fullShortUrl = serverName + "/" + shortUri;
-        //先从缓存获取
-        String originLink = stringRedisTemplate.opsForValue().get(LINK_GOTO_PRE_KEY + fullShortUrl);
-        if (StrUtil.isNotBlank(originLink)) {
-            ((HttpServletResponse) response).sendRedirect(originLink);
-            return;
-        }
-        //解决缓存穿透,先用布隆过滤器判断
-        boolean contains = shortUriCreateCachePenetrationBloomFilter.contains(fullShortUrl);
-        if (!contains) {
-            ((HttpServletResponse) response).sendRedirect("/page/notfound");
-            return;
-        }
-        //判断空值,其实大部分布隆过滤器就可以解决，但还是会存在漏判
-        String isNull = stringRedisTemplate.opsForValue().get(LINK_GOTO_IS_NULL_PRE_KEY + fullShortUrl);
-        if (StrUtil.isNotBlank(isNull)) {//说明缓存的空值,防止穿透
-            ((HttpServletResponse) response).sendRedirect("/page/notfound");
-            return;
-        }
-        RLock lock = redissonClient.getLock(LOCK_GET_ORIGIN_LINK_PRE_KEY + fullShortUrl);
-        lock.lock();
-        try {
-            //双重检测
+        String originLink = "";
+        //是否热key
+        Object hotKeyValue = JdHotKeyStore.getValue(LINK_GOTO_PRE_KEY + fullShortUrl);
+        if (Objects.nonNull(hotKeyValue)) {
+            //是热key并且有值
+            originLink = String.valueOf(hotKeyValue);
+        } else {
+            //不是热key，为null 。为热key但是未设置值
             originLink = stringRedisTemplate.opsForValue().get(LINK_GOTO_PRE_KEY + fullShortUrl);
             if (StrUtil.isNotBlank(originLink)) {
-                ((HttpServletResponse) response).sendRedirect(originLink);
-                return;
-            }
-            ShortLinkGoto shortLinkGoto = shortLinkGoToDao.getByFullShortUrl(fullShortUrl);
-            if (shortLinkGoto == null) {
-                stringRedisTemplate.opsForValue().set(LINK_GOTO_IS_NULL_PRE_KEY + fullShortUrl, "null");
-                ((HttpServletResponse) response).sendRedirect("/page/notfound");
-                return;
-            }
-            ShortLink shortLink = shortLinkDao.getOneByConditions(shortLinkGoto.getUsername(), shortLinkGoto.getFullShortUrl());
-            if (shortLink == null || (shortLink.getValidDateType().equals(ValidTypeEnum.CUSTOM.getType()) && shortLink.getValidDate().before(new Date()))) {
-                stringRedisTemplate.opsForValue().set(LINK_GOTO_IS_NULL_PRE_KEY + fullShortUrl, "null", 30, TimeUnit.MINUTES);
-                ((HttpServletResponse) response).sendRedirect("/page/notfound");
-                return;
-            }
-            //判断有效期是否永久
-            if (!Objects.equals(shortLink.getValidDateType(), ValidTypeEnum.FOREVER.getType())) {
-                stringRedisTemplate.opsForValue().set(LINK_GOTO_PRE_KEY + fullShortUrl, shortLink.getOriginUrl(),
-                        LinkUtil.getLinkCacheValidTime(shortLink.getValidDate()), TimeUnit.MILLISECONDS
-                );
-                ((HttpServletResponse) response).sendRedirect(shortLink.getOriginUrl());
+                setHotKeyOrNull(LINK_GOTO_PRE_KEY + fullShortUrl, originLink);
             } else {
-                //在缓存过期默认一个月
-                stringRedisTemplate.opsForValue().set(LINK_GOTO_PRE_KEY + fullShortUrl, shortLink.getOriginUrl(),ShortLinkConstant.DEFAULT_CACHE_VALID_TIME,TimeUnit.SECONDS);
-                ((HttpServletResponse) response).sendRedirect(shortLink.getOriginUrl());
+                //redis也没有,去数据库加载
+                //解决缓存穿透,先用布隆过滤器判断
+                boolean contains = shortUriCreateCachePenetrationBloomFilter.contains(fullShortUrl);
+                if (!contains) {
+                    ((HttpServletResponse) response).sendRedirect("/page/notfound");
+                    return;
+                }
+                //判断空值,其实大部分布隆过滤器就可以解决，但还是会存在漏判
+                String isNull = stringRedisTemplate.opsForValue().get(LINK_GOTO_IS_NULL_PRE_KEY + fullShortUrl);
+                if (StrUtil.isNotBlank(isNull)) {//说明缓存的空值,防止穿透
+                    ((HttpServletResponse) response).sendRedirect("/page/notfound");
+                    return;
+                }
+                RLock lock = redissonClient.getLock(LOCK_GET_ORIGIN_LINK_PRE_KEY + fullShortUrl);
+                lock.lock();
+                try {
+                    //双重检测
+                    originLink = stringRedisTemplate.opsForValue().get(LINK_GOTO_PRE_KEY + fullShortUrl);
+                    if (StrUtil.isNotBlank(originLink)) {
+                        setHotKeyOrNull(LINK_GOTO_PRE_KEY + fullShortUrl, originLink);
+                    } else {
+                        ShortLinkGoto shortLinkGoto = shortLinkGoToDao.getByFullShortUrl(fullShortUrl);
+                        if (shortLinkGoto == null) {
+                            stringRedisTemplate.opsForValue().set(LINK_GOTO_IS_NULL_PRE_KEY + fullShortUrl, "null");
+                            ((HttpServletResponse) response).sendRedirect("/page/notfound");
+                            return;
+                        }
+                        ShortLink shortLink = shortLinkDao.getOneByConditions(shortLinkGoto.getUsername(), shortLinkGoto.getFullShortUrl());
+                        if (shortLink == null || (shortLink.getValidDateType().equals(ValidTypeEnum.CUSTOM.getType()) && shortLink.getValidDate().before(new Date()))) {
+                            stringRedisTemplate.opsForValue().set(LINK_GOTO_IS_NULL_PRE_KEY + fullShortUrl, "null", 30, TimeUnit.MINUTES);
+                            ((HttpServletResponse) response).sendRedirect("/page/notfound");
+                            return;
+                        }
+                        //判断有效期是否永久
+                        if (!Objects.equals(shortLink.getValidDateType(), ValidTypeEnum.FOREVER.getType())) {
+                            stringRedisTemplate.opsForValue().set(LINK_GOTO_PRE_KEY + fullShortUrl, shortLink.getOriginUrl(),
+                                    LinkUtil.getLinkCacheValidTime(shortLink.getValidDate()), TimeUnit.MILLISECONDS
+                            );
+                            originLink = shortLink.getOriginUrl();
+                        } else {
+                            originLink = shortLink.getOriginUrl();
+                            //在缓存过期默认一个月
+                            stringRedisTemplate.opsForValue().set(LINK_GOTO_PRE_KEY + fullShortUrl, shortLink.getOriginUrl(), ShortLinkConstant.DEFAULT_CACHE_VALID_TIME, TimeUnit.SECONDS);
+                            ((HttpServletResponse) response).sendRedirect(shortLink.getOriginUrl());
+                        }
+                        setHotKeyOrNull(LINK_GOTO_PRE_KEY + fullShortUrl, originLink);
+                    }
+                } finally {
+                    lock.unlock();
+                }
             }
-        } finally {
-            lock.unlock();
+            //进行重定向
+            if (StrUtil.isNotBlank(originLink)) {
+                sendMq(ShortLinkConverter.buildLinkStatsMQDTO());
+                ((HttpServletResponse) response).sendRedirect(originLink);
+            } else {
+                ((HttpServletResponse) response).sendRedirect("/page/notfound");
+            }
         }
     }
 
@@ -152,7 +183,7 @@ public class ShortLinkServiceImpl implements ShortLinkService {
             seconds = LinkUtil.getLinkCacheValidTime(shortLink.getValidDate());
         }
         stringRedisTemplate.opsForValue().set(LINK_GOTO_PRE_KEY + fullShortUrl, shortLinkCreateReqDTO.getOriginUrl(), seconds, TimeUnit.SECONDS);
-        return ShortLinkConverter.buildShortLinkCreateResp(shortLink,officialDomain);
+        return ShortLinkConverter.buildShortLinkCreateResp(shortLink, officialDomain);
     }
 
     @Override
@@ -165,6 +196,7 @@ public class ShortLinkServiceImpl implements ShortLinkService {
         oldLink.setOriginUrl(shortLinkUpdateReqDTO.getOriginUrl());
         oldLink.setValidDateType(shortLinkUpdateReqDTO.getValidDateType());
         oldLink.setValidDate(shortLinkUpdateReqDTO.getValidDate());
+        oldLink.setUpdateTime(null);
         shortLinkDao.updateByConditions(oldLink);
     }
 
@@ -213,6 +245,11 @@ public class ShortLinkServiceImpl implements ShortLinkService {
             customGenerateCount++;
         }
         return shorUri;
+    }
+
+    public void sendMq(LinkStatsMQDTO body) {
+        Message<LinkStatsMQDTO> build = MessageBuilder.withPayload(body).build();
+        rocketMQTemplate.send(MQConstant.SHORT_LINK_STATS_TOPIC, build);
     }
 
 
