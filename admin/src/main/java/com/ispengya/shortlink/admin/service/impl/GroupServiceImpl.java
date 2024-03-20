@@ -75,7 +75,7 @@ public class GroupServiceImpl implements GroupService {
     public void deleteGroup(String gid) {
         //TODO 用户上下文获取
         String username = "ispengya";
-        Group oldGroup = groupDao.getGroupByGIdAndUserName(username,gid);
+        Group oldGroup = groupDao.getGroupByGIdAndUserName(username, gid);
         oldGroup.setDelFlag(YesOrNoEnum.NO.getCode());
         groupDao.updateGroup(oldGroup);
     }
@@ -84,8 +84,8 @@ public class GroupServiceImpl implements GroupService {
     public void updateGroup(GroupUpdateReqDTO requestParam) {
         //TODO 用户上下文获取
         String username = "ispengya";
-        Group oldGroup = groupDao.getGroupByGIdAndUserName(username,requestParam.getGid());
-        AssertUtil.notNull(oldGroup,"该分组不存在");
+        Group oldGroup = groupDao.getGroupByGIdAndUserName(username, requestParam.getGid());
+        AssertUtil.notNull(oldGroup, "该分组不存在");
         oldGroup.setName(requestParam.getName());
         groupDao.updateGroup(oldGroup);
     }
