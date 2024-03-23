@@ -12,7 +12,11 @@ spring:
   data:
     ##############redis#################
     redis:
-      host: 8.130.99.203
-      port: 6336
-      password: 123456
+      host: 47.115.205.198
+      port: 5432
+      password: wLz80kDjq0OuplDHP
       database: 2
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 8.130.42.65:8848

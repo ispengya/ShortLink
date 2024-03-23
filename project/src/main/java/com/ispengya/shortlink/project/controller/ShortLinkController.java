@@ -36,7 +36,7 @@ public class ShortLinkController {
     @GetMapping("/{short-uri}")
     @SneakyThrows
     public void restoreUrl(@PathVariable("short-uri") String shortUri, ServletRequest request, ServletResponse response) {
-        shortLinkService.jumpUrl(shortUri, request, response);
+        shortLinkService.jumpUrlV1(shortUri, request, response);
     }
 
     /**
