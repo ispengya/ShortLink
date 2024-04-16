@@ -5,7 +5,7 @@
 <mapper namespace="com.ispengya.shortlink.project.mapper.ShortLinkMapper">
 
     <!--    &lt;!&ndash; 分页查询短链接 &ndash;&gt;-->
-    <!--    <select id="pageLink" parameterType="com.nageoffer.shortlink.project.dto.req.ShortLinkPageReqDTO"-->
+    <!--    <select id="pageLinkList" parameterType="com.nageoffer.shortlink.project.dto.req.ShortLinkPageReqDTO"-->
     <!--            resultType="com.nageoffer.shortlink.project.dao.entity.ShortLinkDO">-->
     <!--        SELECT t.*,-->
     <!--        COALESCE(s.today_pv, 0) AS todayPv,-->

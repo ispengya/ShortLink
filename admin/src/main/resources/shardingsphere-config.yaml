@@ -3,7 +3,13 @@ dataSources:
   ds_0:
     dataSourceClassName: com.zaxxer.hikari.HikariDataSource
     driverClassName: com.mysql.cj.jdbc.Driver
-    jdbcUrl: jdbc:mysql://127.0.0.1:13306/link?useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    jdbcUrl: jdbc:mysql://127.0.0.1:13306/link_user_0?useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 1234
+  ds_1:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://127.0.0.1:13306/link_user_1?useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: 1234
 
@@ -12,7 +18,12 @@ rules:
     tables:
       t_user:
         # 真实数据节点，比如数据库源以及数据库在数据库中真实存在的
-        actualDataNodes: ds_0.t_user_${0..5}
+        actualDataNodes: ds_${0..1}.t_user_${0..5}
+        #分库策略
+        databaseStrategy:
+          standard:
+            shardingColumn: username
+            shardingAlgorithmName: user_database_hash_mod
         # 分表策略
         tableStrategy:
           # 用于单分片键的标准分片场景
@@ -22,13 +33,32 @@ rules:
             # 分片算法，对应 rules[0].shardingAlgorithms
             shardingAlgorithmName: user_table_hash_mod
       t_group:
-        actualDataNodes: ds_0.t_group_${0..5}
+        actualDataNodes: ds_${0..1}.t_group_${0..5}
+        #分库策略
+        databaseStrategy:
+          standard:
+            shardingColumn: username
+            shardingAlgorithmName: group_database_hash_mod
         tableStrategy:
           standard:
             shardingColumn: username
             shardingAlgorithmName: group_table_hash_mod
     # 分片算法
     shardingAlgorithms:
+      user_database_hash_mod:
+        type: CLASS_BASED
+        props:
+          sharding-count: 6
+          table-sharding-count: 3
+          strategy: standard
+          algorithmClassName: com.ispengya.shortlink.admin.config.CustomDbHashModShardingAlgorithm
+      group_database_hash_mod:
+        type: CLASS_BASED
+        props:
+          sharding-count: 6
+          table-sharding-count: 3
+          strategy: standard
+          algorithmClassName: com.ispengya.shortlink.admin.config.CustomDbHashModShardingAlgorithm
       # 数据表分片算法
       user_table_hash_mod:
         # 根据分片键 Hash 分片
@@ -39,7 +69,7 @@ rules:
       group_table_hash_mod:
         type: HASH_MOD
         props:
-          sharding-count: 16
+          sharding-count: 6
     # 数据加密存储规则
   - !ENCRYPT
     # 需要加密的表集合

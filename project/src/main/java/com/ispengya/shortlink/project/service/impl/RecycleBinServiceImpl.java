@@ -16,9 +16,9 @@ import com.ispengya.shortlink.project.domain.dto.resp.ShortLinkRespDTO;
 import com.ispengya.shortlink.project.domain.eneity.ShortLink;
 import com.ispengya.shortlink.project.service.RecycleBinService;
 import com.ispengya.shortlink.project.service.converter.BeanConverter;
+import com.ispengya.travel.frameworks.starter.cache.toolkit.RedisUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -41,7 +41,6 @@ public class RecycleBinServiceImpl implements RecycleBinService {
     @Value("${official.domain}")
     private String officialDomain;
     private final ShortLinkDao shortLinkDao;
-    private final StringRedisTemplate stringRedisTemplate;
 
     @Override
     public void save(RecycleSaveReqDTO reqDTO) {
@@ -51,7 +50,7 @@ public class RecycleBinServiceImpl implements RecycleBinService {
         shortLink.setUpdateTime(null);
         shortLinkDao.saveRecycle(shortLink);
         //删除redis缓存
-        stringRedisTemplate.delete(RedisConstant.LINK_GOTO_PRE_KEY+reqDTO.getFullShortUrl());
+        RedisUtils.del(RedisConstant.LINK_GOTO_PRE_KEY+reqDTO.getFullShortUrl());
     }
 
     @Override
@@ -84,15 +83,15 @@ public class RecycleBinServiceImpl implements RecycleBinService {
         shortLink.setUpdateTime(null);
         shortLinkDao.recoverInRecycle(shortLink);
         //缓存预热和删除缓存空值
-        stringRedisTemplate.delete(RedisConstant.LINK_GOTO_IS_NULL_PRE_KEY + reqDTO.getFullShortUrl());
+        RedisUtils.del(RedisConstant.LINK_GOTO_IS_NULL_PRE_KEY + reqDTO.getFullShortUrl());
         //判断有效期是否永久
         if (!Objects.equals(shortLink.getValidDateType(), ValidTypeEnum.FOREVER.getType())) {
-            stringRedisTemplate.opsForValue().set(LINK_GOTO_PRE_KEY + reqDTO.getFullShortUrl(), shortLink.getOriginUrl(),
+            RedisUtils.set(LINK_GOTO_PRE_KEY + reqDTO.getFullShortUrl(), shortLink.getOriginUrl(),
                     LinkUtil.getLinkCacheValidTime(shortLink.getValidDate()), TimeUnit.MILLISECONDS
             );
         } else {
             //在缓存过期默认一个月
-            stringRedisTemplate.opsForValue().set(LINK_GOTO_PRE_KEY + reqDTO.getFullShortUrl(), shortLink.getOriginUrl(), ShortLinkConstant.DEFAULT_CACHE_VALID_TIME, TimeUnit.SECONDS);
+            RedisUtils.set(LINK_GOTO_PRE_KEY + reqDTO.getFullShortUrl(), shortLink.getOriginUrl(), ShortLinkConstant.DEFAULT_CACHE_VALID_TIME, TimeUnit.SECONDS);
         }
     }
 
@@ -100,6 +99,6 @@ public class RecycleBinServiceImpl implements RecycleBinService {
     public void remove(RecycleBinRemoveReqDTO reqDTO) {
         shortLinkDao.removeByConditions(reqDTO);
         //删除缓存
-        stringRedisTemplate.delete(RedisConstant.LINK_GOTO_PRE_KEY+reqDTO.getFullShortUrl());
+        RedisUtils.del(RedisConstant.LINK_GOTO_PRE_KEY+reqDTO.getFullShortUrl());
     }
 }

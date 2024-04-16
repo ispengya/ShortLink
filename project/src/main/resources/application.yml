@@ -5,6 +5,8 @@ official:
   domain: url.cn
 
 spring:
+  application:
+    name: short-link-project
   datasource:
     driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
     url: jdbc:shardingsphere:classpath:shardingsphere-config.yaml
@@ -15,15 +17,15 @@ spring:
   data:
     ##############redis#################
     redis:
-      host: 8.130.99.203
-      port: 6336
-      password: 123456
+      host: 47.115.205.198
+      port: 5432
+      password: wLz80kDjq0OuplDHP
       database: 2
+
 
 #==========================rocketmq===========================
 rocketmq:
   name-server: 124.220.44.196:9876
-
   # 默认的消息组
   producer:
     group: shortLinkGroup

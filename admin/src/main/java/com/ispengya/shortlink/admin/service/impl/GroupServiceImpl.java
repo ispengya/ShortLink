@@ -1,6 +1,7 @@
 package com.ispengya.shortlink.admin.service.impl;
 
 import cn.hutool.core.util.RandomUtil;
+import com.ispengya.shortlink.admin.common.user.UserContext;
 import com.ispengya.shortlink.admin.dao.GroupDao;
 import com.ispengya.shortlink.admin.domain.dto.req.GroupAddReqDTO;
 import com.ispengya.shortlink.admin.domain.dto.req.GroupSortReqDTO;
@@ -32,8 +33,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void saveGroup(GroupAddReqDTO groupAddReqDTO) {
-        //TODO 用户上下文获取
-        String username = "ispengya";
+        String username = UserContext.getUsername();
         //判断是否已经存在
         String gid;
         do {
@@ -50,8 +50,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public List<GroupListRespDTO> searchGroupList() {
-        //TODO 用户上下文获取
-        String username = "ispengya";
+        String username = UserContext.getUsername();
         List<Group> groupList = groupDao.listGroupByUserName(username);
         return groupList.stream()
                 //TODO 查询短链接数目
@@ -64,8 +63,7 @@ public class GroupServiceImpl implements GroupService {
             Group update = Group.builder()
                     .sortOrder(groupSortReqDTO.getSortOrder())
                     .gid(groupSortReqDTO.getGid())
-                    //TODO 用户上下文获取
-                    .username("ispengya")
+                    .username(UserContext.getUsername())
                     .build();
             groupDao.updateGroup(update);
         });
@@ -73,8 +71,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void deleteGroup(String gid) {
-        //TODO 用户上下文获取
-        String username = "ispengya";
+        String username = UserContext.getUsername();
         Group oldGroup = groupDao.getGroupByGIdAndUserName(username, gid);
         oldGroup.setDelFlag(YesOrNoEnum.NO.getCode());
         groupDao.updateGroup(oldGroup);
@@ -82,8 +79,7 @@ public class GroupServiceImpl implements GroupService {
 
     @Override
     public void updateGroup(GroupUpdateReqDTO requestParam) {
-        //TODO 用户上下文获取
-        String username = "ispengya";
+        String username = UserContext.getUsername();
         Group oldGroup = groupDao.getGroupByGIdAndUserName(username, requestParam.getGid());
         AssertUtil.notNull(oldGroup, "该分组不存在");
         oldGroup.setName(requestParam.getName());

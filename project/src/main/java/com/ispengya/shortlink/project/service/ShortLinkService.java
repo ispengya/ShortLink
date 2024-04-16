@@ -17,13 +17,24 @@ import java.util.List;
  * @date 2023/11/25 14:19
  */
 public interface ShortLinkService {
+
     /**
-     * 短链接跳转
+     * 短链接跳转 V1版本 多级缓存
+     * @param shortUri
+     * @param request
+     * @param response
+     * @throws IOException
+     */
+    void jumpUrlV1(String shortUri, ServletRequest request, ServletResponse response) throws IOException;
+
+
+    /**
+     * 短链接跳转 V2版本引入jdhotkey
      * @param shortUri
      * @param request
      * @param response
      */
-    void jumpUrl(String shortUri, ServletRequest request, ServletResponse response) throws IOException;
+    void jumpUrlV2(String shortUri, ServletRequest request, ServletResponse response) throws IOException;
 
     /**
      * 创建短链接

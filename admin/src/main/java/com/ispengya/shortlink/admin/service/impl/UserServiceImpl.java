@@ -26,7 +26,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 /**
 * @author 86151
@@ -37,7 +36,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService{
 
-    public static final int TOKEN_TIMEOUT = 30;
+    public static final int TOKEN_TIMEOUT = 30*60;
     private final UserDao userDao;
     private final RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
     private final RedissonClient redissonClient;
@@ -102,7 +101,7 @@ public class UserServiceImpl implements UserService{
         //生成token
         String token = JwtUtils.createToken(loginUser.getUsername());
         //存入Redis
-        RedisUtils.set(RedisConstant.ADMIN_LOGIN_TOKEN_PRE_KEY +userLoginReqDTO.getUsername(),token, TOKEN_TIMEOUT, TimeUnit.MINUTES);
+        RedisUtils.hset(RedisConstant.ADMIN_LOGIN_TOKEN_PRE_KEY +userLoginReqDTO.getUsername(),token, loginUser,TOKEN_TIMEOUT);
         return new UserLoginRespDTO(token);
     }
 
