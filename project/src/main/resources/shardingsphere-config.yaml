@@ -2,7 +2,13 @@ dataSources:
   ds_0:
     dataSourceClassName: com.zaxxer.hikari.HikariDataSource
     driverClassName: com.mysql.cj.jdbc.Driver
-    jdbcUrl: jdbc:mysql://127.0.0.1:13306/link?useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    jdbcUrl: jdbc:mysql://127.0.0.1:13306/link_core_0?useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 1234
+  ds_1:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://127.0.0.1:13306/link_core_1?useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: 1234
 
@@ -10,19 +16,43 @@ rules:
   - !SHARDING
     tables:
       t_link:
-        actualDataNodes: ds_0.t_link_${0..5}
+        actualDataNodes: ds_${0..1}.t_link_${0..5}
+        #分库策略
+        databaseStrategy:
+          standard:
+            shardingColumn: username
+            shardingAlgorithmName: link_database_complex_mod
         tableStrategy:
           complex:
             shardingColumns: gid,username
             shardingAlgorithmName: link_table_complex_mod
       t_link_goto:
-        actualDataNodes: ds_0.t_link_goto_${0..5}
+        actualDataNodes: ds_${0..1}.t_link_goto_${0..5}
+        #分库策略
+        databaseStrategy:
+          standard:
+            shardingColumn: full_short_url
+            shardingAlgorithmName: link_goto_database_complex_mod
         tableStrategy:
           standard:
             shardingColumn: full_short_url
             shardingAlgorithmName: link_goto_table_hash_mod
 
     shardingAlgorithms:
+      link_database_complex_mod:
+        type: CLASS_BASED
+        props:
+          sharding-count: 6
+          table-sharding-count: 3
+          strategy: standard
+          algorithmClassName: com.ispengya.shortlink.project.config.CustomDbHashModShardingAlgorithm
+      link_goto_database_complex_mod:
+        type: CLASS_BASED
+        props:
+          sharding-count: 6
+          table-sharding-count: 3
+          strategy: standard
+          algorithmClassName: com.ispengya.shortlink.project.config.CustomDbHashModShardingAlgorithm
       link_table_complex_mod:
         type: CLASS_BASED
         props:
