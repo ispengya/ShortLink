@@ -17,9 +17,9 @@ spring:
   data:
     ##############redis#################
     redis:
-      host: 47.115.205.198
-      port: 5432
-      password: wLz80kDjq0OuplDHP
+      host: 124.220.44.196
+      port: 9991
+      password: iFRQYImbNzwT6Q5P8Uoy
       database: 2
 
 
