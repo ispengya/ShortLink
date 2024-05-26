@@ -20,3 +20,6 @@ spring:
     nacos:
       discovery:
         server-addr: 8.130.42.65:8848
+
+logging:
+  config: classpath:log4j2-spring.xml

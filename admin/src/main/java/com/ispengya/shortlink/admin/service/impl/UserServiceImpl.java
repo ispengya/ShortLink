@@ -10,6 +10,7 @@ import com.ispengya.shortlink.admin.domain.dto.resp.UserLoginRespDTO;
 import com.ispengya.shortlink.admin.domain.entity.User;
 import com.ispengya.shortlink.admin.service.UserService;
 import com.ispengya.shortlink.admin.service.converter.BeanConverter;
+import com.ispengya.shortlink.admin.util.JsonUtils;
 import com.ispengya.shortlink.admin.util.JwtUtils;
 import com.ispengya.shortlink.admin.util.RedisUtils;
 import com.ispengya.shortlink.common.constant.RedisConstant;
@@ -101,7 +102,7 @@ public class UserServiceImpl implements UserService{
         //生成token
         String token = JwtUtils.createToken(loginUser.getUsername());
         //存入Redis
-        RedisUtils.hset(RedisConstant.ADMIN_LOGIN_TOKEN_PRE_KEY +userLoginReqDTO.getUsername(),token, loginUser,TOKEN_TIMEOUT);
+        RedisUtils.hset(RedisConstant.ADMIN_LOGIN_TOKEN_PRE_KEY +userLoginReqDTO.getUsername(),token, JsonUtils.toStr(loginUser),TOKEN_TIMEOUT);
         return new UserLoginRespDTO(token);
     }
 
