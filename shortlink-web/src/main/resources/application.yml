@@ -1,6 +1,16 @@
 server:
   port: 8002
 
+dubbo:
+  application:
+    name: shortlink-web
+  protocol:
+    name: dubbo
+  registry:
+    address: nacos://8.130.42.65:8848?username=nacos&password=nacos
+  consumer:
+    check: false
+
 spring:
   #############数据源#############
   datasource:
@@ -16,10 +26,7 @@ spring:
       port: 9991
       password: iFRQYImbNzwT6Q5P8Uoy
       database: 2
-  cloud:
-    nacos:
-      discovery:
-        server-addr: 8.130.42.65:8848
+
 
 logging:
   config: classpath:log4j2-spring.xml

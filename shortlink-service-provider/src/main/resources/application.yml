@@ -4,6 +4,15 @@ server:
 official:
   domain: url.cn
 
+dubbo:
+  application:
+    name: shortlink-service-provider
+  protocol:
+    name: dubbo
+    port: 50052
+  registry:
+    address: nacos://8.130.42.65:8848?username=nacos&password=nacos
+
 spring:
   application:
     name: short-link-project
@@ -21,7 +30,6 @@ spring:
       port: 9991
       password: iFRQYImbNzwT6Q5P8Uoy
       database: 2
-
 
 #==========================rocketmq===========================
 rocketmq:

@@ -22,11 +22,11 @@
             <artifactId>shortlink-service-api</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/io.github.ck-jesse/jd-hotkey-client -->
+
         <dependency>
-            <groupId>io.github.ck-jesse</groupId>
-            <artifactId>jd-hotkey-client</artifactId>
-            <version>1.0.38</version>
+            <groupId>com.ispengya.shortlink</groupId>
+            <artifactId>shortlink-common</artifactId>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -56,11 +56,13 @@
             </exclusions>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/io.github.ck-jesse/jd-hotkey-client -->
         <dependency>
-            <groupId>com.ispengya.shortlink</groupId>
-            <artifactId>shortlink-common</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <groupId>io.github.ck-jesse</groupId>
+            <artifactId>jd-hotkey-client</artifactId>
+            <version>1.0.38</version>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -93,16 +95,6 @@
             <artifactId>spring-boot-starter-log4j2</artifactId>
         </dependency>
 
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.boot</groupId>-->
-<!--            <artifactId>spring-boot-starter-data-redis</artifactId>-->
-<!--        </dependency>-->
-
-<!--        <dependency>-->
-<!--            <groupId>org.redisson</groupId>-->
-<!--            <artifactId>redisson-spring-boot-starter</artifactId>-->
-<!--        </dependency>-->
-
         <dependency>
             <groupId>org.apache.shardingsphere</groupId>
             <artifactId>shardingsphere-jdbc-core</artifactId>
@@ -113,11 +105,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-
-<!--        <dependency>-->
-<!--            <groupId>com.alibaba.fastjson2</groupId>-->
-<!--            <artifactId>fastjson2</artifactId>-->
-<!--        </dependency>-->
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -135,6 +122,21 @@
             <artifactId>rocketmq-spring-boot-starter</artifactId>
             <version>2.2.3</version>
         </dependency>
+
+        <!--        <dependency>-->
+        <!--            <groupId>org.springframework.boot</groupId>-->
+        <!--            <artifactId>spring-boot-starter-data-redis</artifactId>-->
+        <!--        </dependency>-->
+
+        <!--        <dependency>-->
+        <!--            <groupId>org.redisson</groupId>-->
+        <!--            <artifactId>redisson-spring-boot-starter</artifactId>-->
+        <!--        </dependency>-->
+
+        <!--        <dependency>-->
+        <!--            <groupId>com.alibaba.fastjson2</groupId>-->
+        <!--            <artifactId>fastjson2</artifactId>-->
+        <!--        </dependency>-->
     </dependencies>
 
     <build>
