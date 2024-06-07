@@ -8,11 +8,11 @@
     <artifactId>shortlink</artifactId>
     <version>1.0-SNAPSHOT</version>
     <modules>
-        <module>admin</module>
-        <module>project</module>
+        <module>shortlink-web</module>
+        <module>shortlink-service-provider</module>
         <module>gateway</module>
-        <module>common</module>
-        <module>api</module>
+        <module>shortlink-common</module>
+        <module>shortlink-service-api</module>
     </modules>
     <packaging>pom</packaging>
 
