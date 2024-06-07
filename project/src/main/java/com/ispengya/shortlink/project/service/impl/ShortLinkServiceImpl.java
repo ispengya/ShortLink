@@ -24,7 +24,7 @@ import com.ispengya.shortlink.project.domain.eneity.ShortLinkGoto;
 import com.ispengya.shortlink.project.service.ShortLinkService;
 import com.ispengya.shortlink.project.service.converter.BeanConverter;
 import com.ispengya.shortlink.project.service.converter.ShortLinkConverter;
-import com.ispengya.travel.frameworks.starter.cache.core.MultiStageCache;
+import com.ispengya.travel.frameworks.starter.cache.core.multistage.MultiStageCache;
 import com.jd.platform.hotkey.client.callback.JdHotKeyStore;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;

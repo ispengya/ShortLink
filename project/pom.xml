@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>project</artifactId>
+    <artifactId>shortlink-project</artifactId>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -17,6 +17,11 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.ispengya.shortlink</groupId>
+            <artifactId>shortlink-service-api</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/io.github.ck-jesse/jd-hotkey-client -->
         <dependency>
             <groupId>io.github.ck-jesse</groupId>
@@ -32,7 +37,7 @@
 
         <dependency>
             <groupId>com.ispengya.shortlink</groupId>
-            <artifactId>common</artifactId>
+            <artifactId>shortlink-common</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
