@@ -9,8 +9,8 @@
         <!-- %logger{36} 表示 Logger 名字最长36个字符 -->
         <property name="LOG_PATTERN" value="%date{HH:mm:ss.SSS} %X{PFTID} [%thread] %-5level %logger{36} - %msg%n" />
         <!-- 定义日志存储的路径 -->
-        <property name="FILE_PATH" value="../data/logs/project" />
-        <property name="FILE_NAME" value="shortlink-project.log" />
+        <property name="FILE_PATH" value="../data/logs/service" />
+        <property name="FILE_NAME" value="shortlink-service-provider.log" />
     </Properties>
 
     <!--https://logging.apache.org/log4j/2.x/manual/appenders.html-->

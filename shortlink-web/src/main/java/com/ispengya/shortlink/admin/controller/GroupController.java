@@ -1,15 +1,22 @@
 package com.ispengya.shortlink.admin.controller;
 
-import com.ispengya.shortlink.admin.domain.dto.req.GroupAddReqDTO;
-import com.ispengya.shortlink.admin.domain.dto.req.GroupSortReqDTO;
-import com.ispengya.shortlink.admin.domain.dto.req.GroupUpdateReqDTO;
-import com.ispengya.shortlink.admin.domain.dto.resp.GroupListRespDTO;
-import com.ispengya.shortlink.admin.service.GroupService;
+import com.ispengya.shortlink.admin.dto.request.GroupAddParam;
+import com.ispengya.shortlink.admin.dto.request.GroupSortParam;
+import com.ispengya.shortlink.admin.dto.request.GroupUpdateParam;
+import com.ispengya.shortlink.admin.dto.response.GroupListRespDTO;
+import com.ispengya.shortlink.admin.service.GroupDubboService;
 import com.ispengya.shortlink.common.result.Result;
 import com.ispengya.shortlink.common.result.Results;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import org.apache.dubbo.config.annotation.DubboReference;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
@@ -18,17 +25,17 @@ import java.util.List;
  * @date 2023/11/21 16:40
  */
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/short-link/admin")
 public class GroupController {
-    private final GroupService groupService;
+    @DubboReference
+    private GroupDubboService groupDubboService;
 
     /**
      * 添加分组
      */
     @PostMapping("/auth/group")
-    public Result<Void> save(@Valid @RequestBody GroupAddReqDTO groupAddReqDTO){
-        groupService.saveGroup(groupAddReqDTO);
+    public Result<Void> save(@Valid @RequestBody GroupAddParam param){
+        groupDubboService.saveGroup(param);
         return Results.success();
     }
 
@@ -37,15 +44,15 @@ public class GroupController {
      */
     @GetMapping("/auth/group")
     public Result<List<GroupListRespDTO>> list(){
-        return Results.success(groupService.searchGroupList());
+        return Results.success(groupDubboService.searchGroupList());
     }
 
     /**
      * 排序分组
      */
     @PutMapping("/auth/group/sort")
-    public Result<Void> sort(@RequestBody List<GroupSortReqDTO> reqDTOList){
-        groupService.sort(reqDTOList);
+    public Result<Void> sort(@RequestBody List<GroupSortParam> reqDTOList){
+//        groupService.sort(reqDTOList);
         return Results.success();
     }
 
@@ -53,8 +60,8 @@ public class GroupController {
      * 修改短链接分组名称
      */
     @PutMapping("/auth/group")
-    public Result<Void> updateGroup(@RequestBody GroupUpdateReqDTO requestParam) {
-        groupService.updateGroup(requestParam);
+    public Result<Void> updateGroup(@RequestBody GroupUpdateParam requestParam) {
+        groupDubboService.updateGroup(requestParam);
         return Results.success();
     }
 
@@ -63,7 +70,7 @@ public class GroupController {
      */
     @DeleteMapping("/auth/group")
     public Result<Void> updateGroup(@RequestParam String gid) {
-        groupService.deleteGroup(gid);
+        groupDubboService.deleteGroup(gid);
         return Results.success();
     }
 }
