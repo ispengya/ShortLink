@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ispengya.shortlink.common.errorcode.BaseErrorCode;
 import com.ispengya.shortlink.common.exception.AbstractException;
+import com.ispengya.shortlink.common.exception.ClientException;
 import com.ispengya.shortlink.common.result.Result;
 import com.ispengya.shortlink.common.result.Results;
 import jakarta.servlet.http.HttpServletRequest;
@@ -42,6 +43,15 @@ public class GlobalExceptionHandler {
                 .orElse(StrUtil.EMPTY);
         log.error("[{}] {} [ex] {}", request.getMethod(), getUrl(request), exceptionStr);
         return Results.failure(BaseErrorCode.SERVICE_PARAM_ERROR.code(), exceptionStr);
+    }
+
+    /**
+     * 拦截参数验证异常
+     */
+    @SneakyThrows
+    @ExceptionHandler(value = ClientException.class)
+    public Result clientExceptionHandler(HttpServletRequest request, ClientException ex) {
+        return Results.failure(ex.errorCode, ex.errorMessage);
     }
 
     @SneakyThrows

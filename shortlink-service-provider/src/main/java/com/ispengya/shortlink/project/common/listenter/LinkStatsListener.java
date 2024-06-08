@@ -1,7 +1,7 @@
 package com.ispengya.shortlink.project.common.listenter;
 
 import com.ispengya.shortlink.common.constant.MQConstant;
-import com.ispengya.shortlink.project.domain.dto.common.LinkStatsMQDTO;
+import com.ispengya.shortlink.project.domain.LinkStatsMQDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.MessageModel;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;

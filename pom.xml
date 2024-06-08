@@ -10,7 +10,6 @@
     <modules>
         <module>shortlink-web</module>
         <module>shortlink-service-provider</module>
-        <module>gateway</module>
         <module>shortlink-common</module>
         <module>shortlink-service-api</module>
     </modules>

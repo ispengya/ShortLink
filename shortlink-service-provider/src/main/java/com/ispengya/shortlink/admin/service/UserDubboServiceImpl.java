@@ -7,6 +7,7 @@ import com.ispengya.shortlink.admin.dto.request.UserRegisterParam;
 import com.ispengya.shortlink.admin.dto.request.UserUpdateParam;
 import com.ispengya.shortlink.admin.dto.response.UserInfoRespDTO;
 import com.ispengya.shortlink.admin.dto.response.UserLoginRespDTO;
+import com.ispengya.shortlink.common.biz.UserInfoDTO;
 import com.ispengya.shortlink.common.constant.RedisConstant;
 import com.ispengya.shortlink.common.converter.BeanConverter;
 import com.ispengya.shortlink.common.errorcode.BaseErrorCode;
@@ -16,7 +17,6 @@ import com.ispengya.shortlink.common.exception.ServiceException;
 import com.ispengya.shortlink.common.util.AssertUtil;
 import com.ispengya.shortlink.common.util.JwtUtils;
 import com.ispengya.shortlink.common.util.RedisUtils;
-import com.ispengya.travel.frameworks.starter.cache.toolkit.JsonUtils;
 import lombok.RequiredArgsConstructor;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.redisson.api.RBloomFilter;
@@ -102,8 +102,13 @@ public class UserDubboServiceImpl implements UserDubboService {
         AssertUtil.isTrue(Objects.equals(loginUser.getPassword(), userLoginParam.getPassword()),"密码错误");
         //生成token
         String token = JwtUtils.createToken(loginUser.getUsername());
+        UserInfoDTO userInfoDTO = UserInfoDTO.builder()
+                .username(loginUser.getUsername())
+                .userId(String.valueOf(loginUser.getId()))
+                .build();
         //存入Redis
-        RedisUtils.hset(RedisConstant.ADMIN_LOGIN_TOKEN_PRE_KEY + userLoginParam.getUsername(),token, JsonUtils.toStr(loginUser),TOKEN_TIMEOUT);
+        RedisUtils.set(RedisConstant.ADMIN_LOGIN_TOKEN_PRE_KEY + userLoginParam.getUsername(),
+                userInfoDTO,TOKEN_TIMEOUT);
         return new UserLoginRespDTO(token);
     }
 

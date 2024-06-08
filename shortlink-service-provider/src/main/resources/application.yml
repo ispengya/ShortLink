@@ -12,6 +12,8 @@ dubbo:
     port: 50052
   registry:
     address: nacos://8.130.42.65:8848?username=nacos&password=nacos
+  provider:
+    filter: -exception
 
 spring:
   application:

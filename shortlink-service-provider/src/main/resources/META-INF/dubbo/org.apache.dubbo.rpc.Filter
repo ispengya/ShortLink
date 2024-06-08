@@ -1,0 +1,1 @@
+dubboProviderFilter=com.ispengya.shortlink.common.dubbo.DubboProviderFilter

@@ -12,7 +12,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
  * 短链接应用
  */
 @SpringBootApplication
-@MapperScan("com.ispengya.shortlink.project.mapper")
+@MapperScan("com.ispengya.shortlink.*.mapper")
 @EnableDubbo
 public class ShortLinkApplication {
 

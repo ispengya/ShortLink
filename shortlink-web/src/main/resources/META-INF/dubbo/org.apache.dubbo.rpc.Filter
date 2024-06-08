@@ -1,0 +1,1 @@
+dubboConsumerFilter=com.ispengya.shortlink.admin.common.dubbo.DubboConsumerFilter

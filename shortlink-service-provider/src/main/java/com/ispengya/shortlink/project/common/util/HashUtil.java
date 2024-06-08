@@ -2,10 +2,21 @@ package com.ispengya.shortlink.project.common.util;
 
 import cn.hutool.core.lang.hash.MurmurHash;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
 /**
  * HASH 工具类
  */
 public class HashUtil {
+
+    public static final Map<Integer, Set<Integer>> map=new HashMap<>();
+
+    static {
+        map.put(0, Set.of(0,1,2));
+        map.put(1, Set.of(3,4,5));
+    }
 
     private static final char[] CHARS = new char[]{
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -30,13 +41,26 @@ public class HashUtil {
         return convertDecToBase62(num);
     }
 
-    public static int hashAndMapToRange(String s,int shardRange){
+    public static int hashAndMapToRange(String s,int shardRange,String databaseSuffix){
         int hashNum = Math.abs(MurmurHash.hash32(s));
-        return hashNum%shardRange;
+        int tableIndex = hashNum%shardRange;
+        if (!isShardingTrue(tableIndex,databaseSuffix)){
+            if (databaseSuffix.equals("0")){
+                tableIndex=tableIndex-3;
+            }else if (databaseSuffix.equals("1")){
+                tableIndex=tableIndex+3;
+            }
+            return tableIndex;
+        }
+        return tableIndex;
+    }
+
+    public static boolean isShardingTrue(int tableIndex, String databaseSuffix) {
+        Set<Integer> integers = map.get(Integer.parseInt(databaseSuffix));
+        return integers.contains(tableIndex);
     }
 
     public static void main(String[] args) {
-        int i = hashAndMapToRange( "ispensqqdttga1",7);
-        System.out.println(i);
+        System.out.println(isShardingTrue(5, "1"));
     }
 }

@@ -10,7 +10,23 @@ dubbo:
     address: nacos://8.130.42.65:8848?username=nacos&password=nacos
   consumer:
     check: false
+    timeout: 5000
 
+
+spring:
+  application:
+    name: short-link-web
+  data:
+    ##############redis#################
+    redis:
+      host: 124.220.44.196
+      port: 9991
+      password: iFRQYImbNzwT6Q5P8Uoy
+      database: 2
+  mvc:
+    view:
+      prefix: /templates/
+      suffix: .html
 
 logging:
   config: classpath:log4j2-spring.xml

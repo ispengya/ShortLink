@@ -30,6 +30,8 @@ public final class CustomAdminDbHashModShardingAlgorithm implements StandardShar
     @Override
     public String doSharding(final Collection<String> availableTargetNames, final PreciseShardingValue<Comparable<?>> shardingValue) {
         String suffix = String.valueOf(hashShardingValue(shardingValue.getValue()) % shardingCount / tableShardingCount);
+        //TODO 目前先加上2
+        suffix = String.valueOf(Integer.parseInt(suffix)+2);
         return ShardingAutoTableAlgorithmUtil.findMatchedTargetName(availableTargetNames, suffix, shardingValue.getDataNodeInfo()).orElse(null);
     }
 

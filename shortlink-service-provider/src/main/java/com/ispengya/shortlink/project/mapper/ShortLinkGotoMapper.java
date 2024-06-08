@@ -1,7 +1,7 @@
 package com.ispengya.shortlink.project.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.ispengya.shortlink.project.domain.eneity.ShortLinkGoto;
+import com.ispengya.shortlink.project.domain.ShortLinkGoto;
 
 /**
  * 短链接跳转持久层

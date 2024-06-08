@@ -6,6 +6,8 @@ import com.ispengya.shortlink.admin.dto.request.UserRegisterParam;
 import com.ispengya.shortlink.admin.dto.request.UserUpdateParam;
 import com.ispengya.shortlink.admin.dto.response.GroupListRespDTO;
 import com.ispengya.shortlink.admin.dto.response.UserInfoRespDTO;
+import com.ispengya.shortlink.project.domain.ShortLink;
+import com.ispengya.shortlink.project.dto.response.ShortLinkRespDTO;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 
@@ -31,5 +33,5 @@ public interface BeanConverter {
     /**
      * project
      */
-
+    ShortLinkRespDTO converterLink1(ShortLink shortLink);
 }

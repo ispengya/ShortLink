@@ -43,7 +43,7 @@
     <!--        </choose>-->
     <!--    </select>-->
     <select id="getGroupLinkCount"
-            resultType="com.ispengya.shortlink.project.domain.dto.resp.ShortLinkGroupCountQueryRespDTO">
+            resultType="com.ispengya.shortlink.project.dto.response.ShortLinkGroupCountQueryRespDTO">
         select gid, count(*) as shortLinkCount
         from t_link
         where

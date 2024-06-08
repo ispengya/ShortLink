@@ -86,19 +86,21 @@ rules:
           sharding-count: 6
           table-sharding-count: 3
           strategy: standard
-          algorithmClassName: com.ispengya.shortlink.project.config.CustomDbHashModShardingAlgorithm
+          algorithmClassName: com.ispengya.shortlink.common.sharding.CustomProjectDbHashModShardingAlgorithm
       link_goto_database_complex_mod:
         type: CLASS_BASED
         props:
           sharding-count: 6
           table-sharding-count: 3
           strategy: standard
-          algorithmClassName: com.ispengya.shortlink.project.config.CustomDbHashModShardingAlgorithm
+          algorithmClassName: com.ispengya.shortlink.common.sharding.CustomProjectDbHashModShardingAlgorithm
       link_table_complex_mod:
         type: CLASS_BASED
         props:
-          algorithmClassName: com.ispengya.shortlink.project.common.shard.LinkCommonTableComplexAlgorithm
-          table-sharding-count: 6
+          algorithmClassName: com.ispengya.shortlink.common.sharding.LinkCommonTableComplexAlgorithm
+          sharding-count: 6
+          table-sharding-count: 3
+          database-count: 2
           strategy: complex
       link_goto_table_hash_mod:
         type: HASH_MOD
