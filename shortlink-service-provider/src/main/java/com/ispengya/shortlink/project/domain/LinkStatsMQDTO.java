@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -15,7 +16,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class LinkStatsMQDTO {
+public class LinkStatsMQDTO implements Serializable {
     /**
      * 完整短链接
      */
@@ -70,4 +71,6 @@ public class LinkStatsMQDTO {
      * 当前时间
      */
     private Date currentDate;
+
+    private String statsLocaleAmapKey;
 }

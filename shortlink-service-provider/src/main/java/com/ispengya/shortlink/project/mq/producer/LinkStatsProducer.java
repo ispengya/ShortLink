@@ -2,6 +2,7 @@ package com.ispengya.shortlink.project.mq.producer;
 
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ispengya.shortlink.common.constant.MQConstant;
 import static com.ispengya.shortlink.common.constant.ShortLinkConstant.SHORT_LINK_STATS_UIP_KEY;
@@ -15,6 +16,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -37,8 +39,10 @@ public class LinkStatsProducer {
     private RocketMQTemplate rocketMQTemplate;
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+    @Value("${short-link.stats.locale.amap-key}")
+    private String statsLocaleAmapKey;
 
-    public void sendMsg(String fullShortUrl, ServletRequest request,
+    public void sendMsg(String fullShortUrl,ServletRequest request,
                         ServletResponse response){
         LinkStatsMQDTO linkStatsMQDTO = buildLinkStatsRecordAndSetUser(fullShortUrl, request, response);
         Message<LinkStatsMQDTO> build = MessageBuilder.withPayload(linkStatsMQDTO).build();
@@ -80,6 +84,8 @@ public class LinkStatsProducer {
         String network = LinkUtil.getNetwork(((HttpServletRequest) request));
         Long uipAdded = stringRedisTemplate.opsForSet().add(SHORT_LINK_STATS_UIP_KEY + fullShortUrl, remoteAddr);
         boolean uipFirstFlag = uipAdded != null && uipAdded > 0L;
+        //TODO
+        String keys = IdUtil.getSnowflake(1, 1).nextIdStr();
         return LinkStatsMQDTO.builder()
                 .fullShortUrl(fullShortUrl)
                 .uv(uv.get())
@@ -90,7 +96,9 @@ public class LinkStatsProducer {
                 .browser(browser)
                 .device(device)
                 .network(network)
+                .keys(keys)
                 .currentDate(new Date())
+                .statsLocaleAmapKey(statsLocaleAmapKey)
                 .build();
     }
 }

@@ -55,4 +55,14 @@
             and enable_status = 0
             group by gid
     </select>
+
+    <!-- 自增短链接访问次数 -->
+    <update id="incrementStats">
+        UPDATE t_link
+        SET total_pv  = total_pv + #{totalPv},
+            total_uv  = total_uv + #{totalUv},
+            total_uip = total_uip + #{totalUip}
+        WHERE username = #{username}
+          AND short_uri = #{shortUri}
+    </update>
 </mapper>

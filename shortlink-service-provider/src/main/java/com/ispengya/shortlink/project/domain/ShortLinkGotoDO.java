@@ -6,12 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Data
 @Builder
 @TableName("t_link_goto")
 @NoArgsConstructor
 @AllArgsConstructor
-public class ShortLinkGoto {
+public class ShortLinkGotoDO implements Serializable {
 
     /**
      * ID
@@ -32,4 +34,6 @@ public class ShortLinkGoto {
      * 完整短链接
      */
     private String fullShortUrl;
+
+    private Integer delFlag;
 }

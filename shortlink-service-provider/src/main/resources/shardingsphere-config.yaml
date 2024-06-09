@@ -23,6 +23,12 @@ dataSources:
     jdbcUrl: jdbc:mysql://124.220.44.196:9992/link_user_1?useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: WEbXHFtmQ6votVGeIFHK
+  ds_4:
+    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
+    driverClassName: com.mysql.cj.jdbc.Driver
+    jdbcUrl: jdbc:mysql://124.220.44.196:9992/link_data_ext?useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: WEbXHFtmQ6votVGeIFHK
 
 rules:
   - !SHARDING
@@ -78,6 +84,23 @@ rules:
           standard:
             shardingColumn: username
             shardingAlgorithmName: group_table_hash_mod
+      #################################data-ext-rules不进行分库分表##############################################
+      t_link_access_logs:
+        actualDataNodes: ds_4.t_link_access_logs
+      t_link_access_stats:
+        actualDataNodes: ds_4.t_link_access_stats
+      t_link_browser_stats:
+        actualDataNodes: ds_4.t_link_browser_stats
+      t_link_device_stats:
+        actualDataNodes: ds_4.t_link_device_stats
+      t_link_locale_stats:
+        actualDataNodes: ds_4.t_link_locale_stats
+      t_link_network_stats:
+        actualDataNodes: ds_4.t_link_network_stats
+      t_link_os_stats:
+        actualDataNodes: ds_4.t_link_os_stats
+      t_link_stats_today:
+        actualDataNodes: ds_4.t_link_stats_today
     shardingAlgorithms:
       #################################project-shardingAlgorithms##############################################
       link_database_complex_mod:

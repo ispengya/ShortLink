@@ -1,6 +1,6 @@
 package com.ispengya.shortlink.common.converter;
 
-import com.ispengya.shortlink.project.domain.ShortLink;
+import com.ispengya.shortlink.project.domain.ShortLinkDO;
 import com.ispengya.shortlink.project.dto.request.ShortLinkCreateParam;
 import com.ispengya.shortlink.project.dto.response.ShortLinkCreateRespDTO;
 
@@ -12,8 +12,8 @@ public class ShortLinkConverter {
 
     public static final int DATA_INIT = 0;
 
-    public static ShortLink buildShortLink(String shortUri, String fullShortUrl, ShortLinkCreateParam shortLinkCreateParam, String username, String favicon) {
-        return ShortLink.builder()
+    public static ShortLinkDO buildShortLink(String shortUri, String fullShortUrl, ShortLinkCreateParam shortLinkCreateParam, String username, String favicon) {
+        return ShortLinkDO.builder()
                 .gid(shortLinkCreateParam.getGid())
                 .username(username)
                 .domain(shortLinkCreateParam.getDomain())
@@ -32,18 +32,18 @@ public class ShortLinkConverter {
                 .build();
     }
 
-    public static ShortLinkCreateRespDTO buildShortLinkCreateResp(ShortLink shortLink, String officialDomain) {
+    public static ShortLinkCreateRespDTO buildShortLinkCreateResp(ShortLinkDO shortLinkDO, String officialDomain) {
         ShortLinkCreateRespDTO shortLinkCreateRespDTO = ShortLinkCreateRespDTO.builder()
-                .fullShortUrl(shortLink.getFullShortUrl())
-                .originUrl(shortLink.getOriginUrl())
-                .gid(shortLink.getGid())
+                .fullShortUrl(shortLinkDO.getFullShortUrl())
+                .originUrl(shortLinkDO.getOriginUrl())
+                .gid(shortLinkDO.getGid())
                 .build();
         //判断domain是否是自定义的
-        if (shortLink.getDomain().equals(officialDomain)) {
+        if (shortLinkDO.getDomain().equals(officialDomain)) {
             //TODO 真正上线是https
-            shortLinkCreateRespDTO.setFullShortUrl("http://" + shortLink.getFullShortUrl());
+            shortLinkCreateRespDTO.setFullShortUrl("http://" + shortLinkDO.getFullShortUrl());
         } else {
-            shortLinkCreateRespDTO.setFullShortUrl("http://" + shortLink.getFullShortUrl());
+            shortLinkCreateRespDTO.setFullShortUrl("http://" + shortLinkDO.getFullShortUrl());
         }
         return shortLinkCreateRespDTO;
     }

@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -18,7 +19,7 @@ import java.util.Date;
 @TableName("t_link")
 @NoArgsConstructor
 @AllArgsConstructor
-public class ShortLink{
+public class ShortLinkDO implements Serializable {
 
     /**
      * id
