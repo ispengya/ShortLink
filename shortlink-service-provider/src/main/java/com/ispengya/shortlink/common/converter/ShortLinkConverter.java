@@ -1,6 +1,5 @@
 package com.ispengya.shortlink.common.converter;
 
-import com.ispengya.shortlink.project.domain.LinkStatsMQDTO;
 import com.ispengya.shortlink.project.domain.ShortLink;
 import com.ispengya.shortlink.project.dto.request.ShortLinkCreateParam;
 import com.ispengya.shortlink.project.dto.response.ShortLinkCreateRespDTO;
@@ -47,9 +46,5 @@ public class ShortLinkConverter {
             shortLinkCreateRespDTO.setFullShortUrl("http://" + shortLink.getFullShortUrl());
         }
         return shortLinkCreateRespDTO;
-    }
-
-    public static LinkStatsMQDTO buildLinkStatsMQDTO() {
-        return new LinkStatsMQDTO("ssss","ispengya");
     }
 }

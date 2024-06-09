@@ -7,14 +7,12 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import static com.ispengya.shortlink.common.constant.RedisConstant.LINK_GOTO_IS_NULL_PRE_KEY;
 import static com.ispengya.shortlink.common.constant.RedisConstant.LINK_GOTO_PRE_KEY;
 import static com.ispengya.shortlink.common.constant.RedisConstant.LOCK_GET_ORIGIN_LINK_PRE_KEY;
+import com.ispengya.shortlink.common.constant.ShortLinkConstant;
 import com.ispengya.shortlink.common.converter.BeanConverter;
 import com.ispengya.shortlink.common.converter.ShortLinkConverter;
+import com.ispengya.shortlink.common.enums.ValidTypeEnum;
 import com.ispengya.shortlink.common.exception.ServiceException;
 import com.ispengya.shortlink.common.util.AssertUtil;
-import com.ispengya.shortlink.project.common.constant.ShortLinkConstant;
-import com.ispengya.shortlink.project.common.enums.ValidTypeEnum;
-import com.ispengya.shortlink.project.common.util.HashUtil;
-import com.ispengya.shortlink.project.common.util.LinkUtil;
 import com.ispengya.shortlink.project.dao.ShortLinkDao;
 import com.ispengya.shortlink.project.dao.ShortLinkGoToDao;
 import com.ispengya.shortlink.project.domain.LinkStatsMQDTO;
@@ -26,6 +24,9 @@ import com.ispengya.shortlink.project.dto.request.ShortLinkUpdateParam;
 import com.ispengya.shortlink.project.dto.response.ShortLinkCreateRespDTO;
 import com.ispengya.shortlink.project.dto.response.ShortLinkGroupCountQueryRespDTO;
 import com.ispengya.shortlink.project.dto.response.ShortLinkRespDTO;
+import com.ispengya.shortlink.project.mq.producer.LinkStatsProducer;
+import com.ispengya.shortlink.project.util.HashUtil;
+import com.ispengya.shortlink.project.util.LinkUtil;
 import com.ispengya.travel.frameworks.starter.cache.core.multistage.MultiStageCache;
 import com.jd.platform.hotkey.client.callback.JdHotKeyStore;
 import jakarta.servlet.ServletRequest;
@@ -73,12 +74,14 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
     private final UrlDubboServiceImpl urlService;
     private final RocketMQTemplate rocketMQTemplate;
     private final MultiStageCache multiStageCache;
+    private final LinkStatsProducer linkStatsProducer;
 
     @Override
     public void jumpUrlV1(String shortUri, ServletRequest request, ServletResponse response) throws IOException {
         String serverName = request.getServerName();
         String fullShortUrl = serverName + "/" + shortUri;
-        String originLink = multiStageCache.getByMultiStageCache(LINK_GOTO_PRE_KEY + fullShortUrl, String.class, null);
+        String originLink = multiStageCache.getByMultiStageCacheWithoutLimit(LINK_GOTO_PRE_KEY + fullShortUrl,
+                String.class, null);
         if (StrUtil.isEmpty(originLink)) {
             RLock lock = redissonClient.getLock(LOCK_GET_ORIGIN_LINK_PRE_KEY + fullShortUrl);
             lock.lock();
@@ -94,7 +97,7 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
                         return;
                     }
                     ShortLink shortLink = shortLinkDao.getOneByConditions(shortLinkGoto.getUsername(), shortLinkGoto.getFullShortUrl());
-                    if (shortLink == null || (shortLink.getValidDateType().equals(ValidTypeEnum.CUSTOM.getType()) && shortLink.getValidDate().before(new Date()))) {
+                    if (shortLink == null || (shortLink.getValidDate()!=null && shortLink.getValidDateType().equals(ValidTypeEnum.CUSTOM.getType()) && shortLink.getValidDate().before(new Date()))) {
                         stringRedisTemplate.opsForValue().set(LINK_GOTO_IS_NULL_PRE_KEY + fullShortUrl, "null", 30, TimeUnit.MINUTES);
                         ((HttpServletResponse) response).sendRedirect("/page/notfound");
                         return;
@@ -118,7 +121,7 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
         //进行重定向
         if (StrUtil.isNotBlank(originLink)) {
             //异步统计
-            sendMq(ShortLinkConverter.buildLinkStatsMQDTO());
+            linkStatsProducer.sendMsg(fullShortUrl,request,response);
             ((HttpServletResponse) response).sendRedirect(originLink);
         } else {
             ((HttpServletResponse) response).sendRedirect("/page/notfound");
@@ -296,8 +299,7 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
     }
 
     private void sendMq(LinkStatsMQDTO body) {
-//        Message<LinkStatsMQDTO> build = MessageBuilder.withPayload(body).build();
-//        rocketMQTemplate.send(MQConstant.SHORT_LINK_STATS_TOPIC, build);
+
     }
 
     private void setHotKeyOrNull(String key, Object value) {

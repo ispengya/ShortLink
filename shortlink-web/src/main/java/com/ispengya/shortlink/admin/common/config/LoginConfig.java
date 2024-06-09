@@ -20,6 +20,7 @@ public class LoginConfig implements WebMvcConfigurer {
                 "/api/short-link/admin/login",
                 "/api/short-link/admin/register",
                 "/page/notfound",
+                "/{short-uri}",
                 "/test"
         );
     }

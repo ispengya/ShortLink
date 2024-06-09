@@ -1,4 +1,4 @@
-package com.ispengya.shortlink.project.common.util;
+package com.ispengya.shortlink.project.util;
 
 import cn.hutool.core.lang.hash.MurmurHash;
 

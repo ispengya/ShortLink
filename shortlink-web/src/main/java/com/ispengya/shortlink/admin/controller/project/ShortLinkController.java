@@ -9,13 +9,9 @@ import com.ispengya.shortlink.project.dto.response.ShortLinkCreateRespDTO;
 import com.ispengya.shortlink.project.dto.response.ShortLinkGroupCountQueryRespDTO;
 import com.ispengya.shortlink.project.dto.response.ShortLinkRespDTO;
 import com.ispengya.shortlink.project.service.ShortLinkDubboService;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 import jakarta.validation.Valid;
-import lombok.SneakyThrows;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,14 +32,6 @@ public class ShortLinkController {
     private ShortLinkDubboService shortLinkDubboService;
 
 
-    /**
-     * 短链接跳转原始链接
-     */
-    @GetMapping("/{short-uri}")
-    @SneakyThrows
-    public void restoreUrl(@PathVariable("short-uri") String shortUri, ServletRequest request, ServletResponse response) {
-        shortLinkDubboService.jumpUrlV1(shortUri, request, response);
-    }
 
     /**
      * 新增短链接

@@ -1,8 +1,11 @@
 package com.ispengya.shortlink.project.domain;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Date;
 
 /**
  * @author ispengya
@@ -11,7 +14,60 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class LinkStatsMQDTO {
+    /**
+     * 完整短链接
+     */
     private String fullShortUrl;
-    private String username;
+
+    /**
+     * 访问用户IP
+     */
+    private String remoteAddr;
+
+    /**
+     * 操作系统
+     */
+    private String os;
+
+    /**
+     * 浏览器
+     */
+    private String browser;
+
+    /**
+     * 操作设备
+     */
+    private String device;
+
+    /**
+     * 网络
+     */
+    private String network;
+
+    /**
+     * UV
+     */
+    private String uv;
+
+    /**
+     * UV访问标识
+     */
+    private Boolean uvFirstFlag;
+
+    /**
+     * UIP访问标识
+     */
+    private Boolean uipFirstFlag;
+
+    /**
+     * 消息队列唯一标识
+     */
+    private String keys;
+
+    /**
+     * 当前时间
+     */
+    private Date currentDate;
 }

@@ -1,4 +1,4 @@
-package com.ispengya.shortlink.project.common.enums;
+package com.ispengya.shortlink.common.enums;
 
 import lombok.Getter;
 

@@ -1,4 +1,4 @@
-package com.ispengya.shortlink.project.common.util;
+package com.ispengya.shortlink.project.util;
 
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.Optional;
 
-import static com.ispengya.shortlink.project.common.constant.ShortLinkConstant.DEFAULT_CACHE_VALID_TIME;
+import static com.ispengya.shortlink.common.constant.ShortLinkConstant.DEFAULT_CACHE_VALID_TIME;
 
 public class LinkUtil {
 

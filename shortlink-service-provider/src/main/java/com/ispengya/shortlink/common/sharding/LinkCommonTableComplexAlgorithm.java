@@ -3,7 +3,7 @@ package com.ispengya.shortlink.common.sharding;
 import cn.hutool.core.collection.CollUtil;
 import com.google.common.base.Preconditions;
 import com.ispengya.shortlink.common.exception.ServiceException;
-import com.ispengya.shortlink.project.common.util.HashUtil;
+import com.ispengya.shortlink.project.util.HashUtil;
 import lombok.Getter;
 import org.apache.shardingsphere.sharding.api.sharding.complex.ComplexKeysShardingAlgorithm;
 import org.apache.shardingsphere.sharding.api.sharding.complex.ComplexKeysShardingValue;
