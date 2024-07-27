@@ -3,7 +3,11 @@ package com.ispengya.shortlink.project.service;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.text.StrBuilder;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ispengya.shortlink.common.constant.RedisConstant;
 import static com.ispengya.shortlink.common.constant.RedisConstant.LINK_GOTO_IS_NULL_PRE_KEY;
 import static com.ispengya.shortlink.common.constant.RedisConstant.LINK_GOTO_PRE_KEY;
 import static com.ispengya.shortlink.common.constant.RedisConstant.LOCK_GET_ORIGIN_LINK_PRE_KEY;
@@ -39,6 +43,7 @@ import org.apache.dubbo.config.annotation.DubboService;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
+import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
@@ -93,6 +98,12 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
                     ShortLinkGotoDO shortLinkGotoDO = shortLinkGoToDao.getByFullShortUrl(fullShortUrl);
                     if (shortLinkGotoDO == null) {
                         stringRedisTemplate.opsForValue().set(LINK_GOTO_IS_NULL_PRE_KEY + fullShortUrl, "null");
+                        ((HttpServletResponse) response).sendRedirect("/page/notfound");
+                        return;
+                    }
+                    String gotoIsNullShortLink = stringRedisTemplate.opsForValue().get(String.format(LINK_GOTO_IS_NULL_PRE_KEY,
+                            fullShortUrl));
+                    if (StrUtil.isNotBlank(gotoIsNullShortLink)) {
                         ((HttpServletResponse) response).sendRedirect("/page/notfound");
                         return;
                     }
@@ -238,18 +249,76 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
     }
 
     @Override
-    public void updateShortLink(ShortLinkUpdateParam shortLinkUpdateParam) {
+    public void updateShortLink(ShortLinkUpdateParam requestParam) {
         //查询更改的短链接
-        ShortLinkDO oldLink = shortLinkDao.getOneByConditions(shortLinkUpdateParam.getUsername(), shortLinkUpdateParam.getFullShortUrl());
+        ShortLinkDO oldLink = shortLinkDao.getOneByConditions(requestParam.getUsername(), requestParam.getFullShortUrl());
         AssertUtil.notNull(oldLink, "短链接不存在");
-        oldLink.setGid(shortLinkUpdateParam.getGid());
-        oldLink.setDescribe(shortLinkUpdateParam.getDescribe());
-        oldLink.setOriginUrl(shortLinkUpdateParam.getOriginUrl());
-        oldLink.setValidDateType(shortLinkUpdateParam.getValidDateType());
-        oldLink.setValidDate(shortLinkUpdateParam.getValidDate());
-        //这样才会自动更新时间
-        oldLink.setUpdateTime(null);
-        shortLinkDao.updateByConditions(oldLink);
+        if (Objects.equals(oldLink.getGid(), requestParam.getGid())) {
+            ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+                    .domain(oldLink.getDomain())
+                    .shortUri(oldLink.getShortUri())
+                    .favicon(oldLink.getFavicon())
+                    .createdType(oldLink.getCreatedType())
+                    .gid(requestParam.getGid())
+                    .originUrl(requestParam.getOriginUrl())
+                    .describe(requestParam.getDescribe())
+                    .validDateType(requestParam.getValidDateType())
+                    .validDate(requestParam.getValidDate())
+                    .build();
+            shortLinkDao.updateByConditions(shortLinkDO);
+        } else {
+            // 为什么监控表要加上Gid？不加的话是否就不存在读写锁？详情查看：https://nageoffer.com/shortlink/question
+            RReadWriteLock
+                    readWriteLock = redissonClient.getReadWriteLock(String.format(RedisConstant.LOCK_GID_UPDATE_KEY,
+                    requestParam.getFullShortUrl()));
+            RLock rLock = readWriteLock.writeLock();
+            rLock.lock();
+            try {
+                ShortLinkDO delShortLinkDO = ShortLinkDO.builder()
+                        .build();
+                delShortLinkDO.setDelFlag(1);
+                delShortLinkDO.setFullShortUrl(oldLink.getFullShortUrl());
+                delShortLinkDO.setUsername(oldLink.getUsername());
+                shortLinkDao.updateByConditions(delShortLinkDO);
+                ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+                        .domain(officialDomain)
+                        .originUrl(requestParam.getOriginUrl())
+                        .gid(requestParam.getGid())
+                        .createdType(oldLink.getCreatedType())
+                        .validDateType(requestParam.getValidDateType())
+                        .validDate(requestParam.getValidDate())
+                        .describe(requestParam.getDescribe())
+                        .shortUri(oldLink.getShortUri())
+                        .enableStatus(oldLink.getEnableStatus())
+                        .totalPv(oldLink.getTotalPv())
+                        .totalUv(oldLink.getTotalUv())
+                        .totalUip(oldLink.getTotalUip())
+                        .fullShortUrl(oldLink.getFullShortUrl())
+                        .favicon(urlService.getFavicon(requestParam.getOriginUrl()))
+                        .build();
+                shortLinkDao.save(shortLinkDO);
+                ShortLinkGotoDO shortLinkGotoDO =
+                        shortLinkGoToDao.getByFullShortUrlAndUserName(requestParam.getFullShortUrl(),
+                                oldLink.getUsername());
+                shortLinkGoToDao.deleteByConditions(shortLinkGotoDO);
+                shortLinkGotoDO.setGid(requestParam.getGid());
+                shortLinkGoToDao.save(shortLinkGotoDO);
+            } finally {
+                rLock.unlock();
+            }
+        }
+        // 短链接如何保障缓存和数据库一致性？详情查看：https://nageoffer.com/shortlink/question
+        if (!Objects.equals(oldLink.getValidDateType(), requestParam.getValidDateType())
+                || !Objects.equals(oldLink.getValidDate(), requestParam.getValidDate())
+                || !Objects.equals(oldLink.getOriginUrl(), requestParam.getOriginUrl())) {
+            stringRedisTemplate.delete(String.format(LINK_GOTO_PRE_KEY, requestParam.getFullShortUrl()));
+            Date currentDate = new Date();
+            if (oldLink.getValidDate() != null && oldLink.getValidDate().before(currentDate)) {
+                if (Objects.equals(requestParam.getValidDateType(), ValidTypeEnum.FOREVER.getType()) || requestParam.getValidDate().after(currentDate)) {
+                    stringRedisTemplate.delete(String.format(LINK_GOTO_IS_NULL_PRE_KEY, requestParam.getFullShortUrl()));
+                }
+            }
+        }
     }
 
     @Override

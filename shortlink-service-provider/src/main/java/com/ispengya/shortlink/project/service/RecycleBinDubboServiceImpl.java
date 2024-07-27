@@ -102,6 +102,7 @@ public class RecycleBinDubboServiceImpl implements RecycleBinDubboService {
     @Override
     public void remove(RecycleBinRemoveParam reqDTO) {
         shortLinkDao.removeByConditions(reqDTO);
+        //TODO 删除路由表
         //删除缓存
         RedisUtils.del(RedisConstant.LINK_GOTO_PRE_KEY+reqDTO.getFullShortUrl());
     }
