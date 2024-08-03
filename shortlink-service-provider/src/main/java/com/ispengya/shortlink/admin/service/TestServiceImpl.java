@@ -1,5 +1,9 @@
 package com.ispengya.shortlink.admin.service;
 
+import com.ispengya.shortlink.project.dao.core.ShortLinkDao;
+import com.ispengya.shortlink.project.domain.ShortLinkDO;
+import com.ispengya.shortlink.project.dto.request.ShortLinkStatsParam;
+import com.ispengya.shortlink.project.mapper.LinkAccessStatsMapper;
 import com.ispengya.travel.frameworks.starter.cache.core.distributed.DistributedCache;
 import com.ispengya.travel.frameworks.starter.cache.core.multistage.MultiStageCache;
 import org.apache.dubbo.config.annotation.DubboService;
@@ -8,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
+
 /**
  * @author 韩志鹏
  * @Description
@@ -15,7 +21,7 @@ import org.springframework.stereotype.Service;
  */
 @DubboService
 @Service
-public class TestServiceImpl implements TestService{
+public class TestServiceImpl implements TestService {
     @Autowired
     private MultiStageCache multiStageCache;
     @Autowired
@@ -24,14 +30,28 @@ public class TestServiceImpl implements TestService{
     private RedissonClient redissonClient;
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private LinkAccessStatsMapper linkAccessStatsMapper;
+    @Autowired
+    private ShortLinkDao shortLinkDao;
 
     @Override
     public void hello() {
-        System.out.println("===========================================");
-        System.out.println(multiStageCache);
-        System.out.println(distributedCache);
-        System.out.println(redissonClient);
-        System.out.println(stringRedisTemplate);
-        System.out.println("===========================================");
+        ShortLinkStatsParam shortLinkStatsParam = new ShortLinkStatsParam();
+        shortLinkStatsParam.setUsername("133dsfsd!");
+        shortLinkStatsParam.setGid("default");
+        shortLinkStatsParam.setFullShortUrl("12");
+        System.out.println(linkAccessStatsMapper.listStatsByShortLink(shortLinkStatsParam));
+//        ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+//                .shortUri("12")
+//                .domain("12")
+//                .clickNum(1)
+//                .createdType(1)
+//                .fullShortUrl("12")
+//                .originUrl("12")
+//                .describe("111")
+//                .username("133dsfsd!")
+//                .build();
+//        shortLinkDao.save(shortLinkDO);
     }
 }

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ispengya.shortlink.project.mapper.LinkAccessStatsMapper">
+
+    <insert id="shortLinkStats">
+        insert into t_link_access_stats
+            (full_short_url, date, pv, uv, uip, hour, weekday, create_time, update_time, del_flag)
+        values
+            ( #{linkAccessStats.fullShortUrl}, #{linkAccessStats.date}, #{linkAccessStats.pv},
+             #{linkAccessStats.uv}, #{linkAccessStats.uip}, #{linkAccessStats.hour},
+             #{linkAccessStats.weekday}, NOW(), NOW(), 0)
+        ON DUPLICATE KEY UPDATE pv = pv   #{linkAccessStats.pv}, uv = uv  #{linkAccessStats.uv}, uip = uip  #{linkAccessStats.uip}
+    </insert>
+
+    <select id="listStatsByShortLink" resultType="com.ispengya.shortlink.project.domain.LinkAccessStatsDO">
+        select tlas.date,
+            SUM(tlas.pv) AS pv,
+            SUM(tlas.uv) AS uv,
+            SUM(tlas.uip) AS uip
+        from
+            t_link tl inner join
+            t_link_access_stats tlas on tl.full_short_url = tlas.full_short_url
+        where
+            tlas.full_short_url = #{param.fullShortUrl}
+            AND tl.gid = #{param.gid}
+            AND tl.username = #{param.username}
+            AND tl.del_flag = '0'
+            AND tl.enable_status = #{param.enableStatus}
+            AND tlas.date BETWEEN #{param.startDate} and #{param.endDate}
+        GROUP BY tlas.full_short_url, tl.gid, tlas.date
+    </select>
+        
+    <select id="listHourStatsByShortLink" resultType="com.ispengya.shortlink.project.domain.LinkAccessStatsDO">
+        SELECT
+            tlas.hour,
+            SUM(tlas.pv) AS pv
+        FROM
+            t_link tl INNER JOIN
+            t_link_access_stats tlas ON tl.full_short_url = tlas.full_short_url
+        WHERE
+            tlas.full_short_url = #{param.fullShortUrl}
+            AND tl.gid = #{param.gid}
+            AND tl.username = #{param.username}
+            AND tl.del_flag = '0'
+            AND tl.enable_status = #{param.enableStatus}
+            AND tlas.date BETWEEN #{param.startDate} and #{param.endDate}
+        GROUP BY  tlas.full_short_url, tl.gid, tlas.hour
+    </select>
+
+    <select id="listWeekdayStatsByShortLink"
+            resultType="com.ispengya.shortlink.project.domain.LinkAccessStatsDO">
+        SELECT  
+            tlas.weekday,
+            SUM(tlas.pv) AS pv
+        FROM
+            t_link tl INNER JOIN
+            t_link_access_stats tlas ON tl.full_short_url = tlas.full_short_url
+        WHERE
+            tlas.full_short_url = #{param.fullShortUrl}
+            AND tl.gid = #{param.gid}
+            AND tl.username = #{param.username}
+            AND tl.del_flag = '0'
+            AND tl.enable_status = #{param.enableStatus}
+            AND tlas.date BETWEEN #{param.startDate} and #{param.endDate}
+        GROUP BY tlas.full_short_url, tl.gid, tlas.weekday
+    </select>
+
+
+</mapper>

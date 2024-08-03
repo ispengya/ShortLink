@@ -36,7 +36,8 @@ spring:
       port: 9991
       password: iFRQYImbNzwT6Q5P8Uoy
       database: 2
-
+mybatis-plus:
+  mapper-locations: classpath:mapper/**/*.xml
 #==========================rocketmq===========================
 rocketmq:
   name-server: 124.220.44.196:9876
