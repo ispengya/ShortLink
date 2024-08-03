@@ -424,8 +424,7 @@ public class ShortLinkStatsServiceDubboImpl implements ShortLinkStatsDubboServic
                 .between(LinkAccessLogsDO::getCreateTime, requestParam.getStartDate(), requestParam.getEndDate())
                 .eq(LinkAccessLogsDO::getDelFlag, 0)
                 .orderByDesc(LinkAccessLogsDO::getCreateTime);
-        Page<LinkAccessLogsDO> page = new Page<>();
-        //TODO
+        Page<LinkAccessLogsDO> page = new Page<>(requestParam.getCurrent(), requestParam.getSize());
         IPage<LinkAccessLogsDO> linkAccessLogsDOIPage = linkAccessLogsMapper.selectPage(page, queryWrapper);
         if (CollUtil.isEmpty(linkAccessLogsDOIPage.getRecords())) {
             return new PageDTO<>();
@@ -451,8 +450,13 @@ public class ShortLinkStatsServiceDubboImpl implements ShortLinkStatsDubboServic
                     .orElse("旧访客");
             each.setUvType(uvType);
         });
-        //TODO
-        return new PageDTO<>();
+        PageDTO<ShortLinkStatsAccessRecordRespDTO> pageDTO = new PageDTO<>();
+        pageDTO.setRecords(actualResult.getRecords());
+        pageDTO.setTotal(actualResult.getTotal());
+        pageDTO.setCurrent(actualResult.getCurrent());
+        pageDTO.setSize(actualResult.getSize());
+        pageDTO.setPages(actualResult.getPages());
+        return pageDTO;
     }
 
     @Override
@@ -483,8 +487,13 @@ public class ShortLinkStatsServiceDubboImpl implements ShortLinkStatsDubboServic
                     .orElse("旧访客");
             each.setUvType(uvType);
         });
-        //TODO
-        return new PageDTO<>();
+        PageDTO<ShortLinkStatsAccessRecordRespDTO> pageDTO = new PageDTO<>();
+        pageDTO.setRecords(actualResult.getRecords());
+        pageDTO.setTotal(actualResult.getTotal());
+        pageDTO.setCurrent(actualResult.getCurrent());
+        pageDTO.setSize(actualResult.getSize());
+        pageDTO.setPages(actualResult.getPages());
+        return pageDTO;
     }
 
     public void checkGroupBelongToUser(String gid) throws ServiceException {

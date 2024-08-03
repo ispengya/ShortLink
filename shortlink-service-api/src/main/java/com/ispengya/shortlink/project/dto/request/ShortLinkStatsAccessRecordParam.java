@@ -31,4 +31,8 @@ public class ShortLinkStatsAccessRecordParam implements Serializable {
      * 启用标识 0：启用 1：未启用
      */
     private Integer enableStatus;
+
+    private Long current;
+
+    private Long size;
 }

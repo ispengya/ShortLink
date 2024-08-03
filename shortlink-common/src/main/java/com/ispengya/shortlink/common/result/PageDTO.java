@@ -15,4 +15,5 @@ public class PageDTO<T> implements Serializable {
     private long total;
     private long size;
     private long current;
+    private long pages;
 }
