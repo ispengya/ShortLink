@@ -29,7 +29,7 @@ public class UserInfoRespDTO implements Serializable {
     /**
      * 真实姓名
      */
-    @JsonSerialize(using = RealNameSerializer.class)
+//    @JsonSerialize(using = RealNameSerializer.class)
     private String realName;
 
     /**

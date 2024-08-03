@@ -32,8 +32,8 @@ public class UserLoginInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
-        String username = request.getHeader("username");
-        String token = request.getHeader("token");
+        String username = request.getHeader("Username");
+        String token = request.getHeader("Token");
         if (StringUtils.hasText(username) && StringUtils.hasText(token)){
             String userInfoStr = stringRedisTemplate.opsForValue().get("short-link:admin:token:" + username);
             if (StringUtils.hasText(userInfoStr)){
