@@ -43,8 +43,8 @@ public class LinkCommonTableComplexAlgorithm implements ComplexKeysShardingAlgor
             String databaseSuffix =
                     String.valueOf(hashShardingValue(actualUserName) % shardingCount / tableShardingCount);
             //计算表后缀
-            int tableIndex = HashUtil.hashAndMapToRange(actualUserName, shardingCount,databaseSuffix);
-            result.add(shardingValue.getLogicTableName() + "_" + tableIndex);
+//            int tableIndex = HashUtil.hashAndMapToRange(actualUserName, shardingCount,databaseSuffix);
+            result.add(shardingValue.getLogicTableName() + "_" + databaseSuffix);
         } else {
             throw new ServiceException("分片键username不能为空");
         }

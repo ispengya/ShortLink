@@ -23,19 +23,13 @@ dataSources:
     jdbcUrl: jdbc:mysql://124.220.44.196:9992/link_user_1?useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: WEbXHFtmQ6votVGeIFHK
-  ds_4:
-    dataSourceClassName: com.zaxxer.hikari.HikariDataSource
-    driverClassName: com.mysql.cj.jdbc.Driver
-    jdbcUrl: jdbc:mysql://124.220.44.196:9992/link_data_ext?useUnicode=true&characterEncoding=UTF-8&rewriteBatchedStatements=true&allowMultiQueries=true&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: WEbXHFtmQ6votVGeIFHK
 
 rules:
   - !SHARDING
     tables:
       #################################project-rules##############################################
       t_link:
-        actualDataNodes: ds_${0..1}.t_link_${0..5}
+        actualDataNodes: ds_0.t_link_${0..2}
         #分库策略
         databaseStrategy:
           standard:
@@ -46,7 +40,7 @@ rules:
             shardingColumns: gid,username
             shardingAlgorithmName: link_table_complex_mod
       t_link_goto:
-        actualDataNodes: ds_${0..1}.t_link_goto_${0..5}
+        actualDataNodes: ds_0.t_link_goto_${0..2}
         #分库策略
         databaseStrategy:
           standard:
@@ -56,6 +50,22 @@ rules:
           standard:
             shardingColumn: full_short_url
             shardingAlgorithmName: link_goto_table_hash_mod
+      t_link_access_logs:
+        actualDataNodes: ds_0.t_link_access_logs
+      t_link_access_stats:
+        actualDataNodes: ds_0.t_link_access_stats
+      t_link_browser_stats:
+        actualDataNodes: ds_0.t_link_browser_stats
+      t_link_device_stats:
+        actualDataNodes: ds_0.t_link_device_stats
+      t_link_locale_stats:
+        actualDataNodes: ds_0.t_link_locale_stats
+      t_link_network_stats:
+        actualDataNodes: ds_0.t_link_network_stats
+      t_link_os_stats:
+        actualDataNodes: ds_0.t_link_os_stats
+      t_link_stats_today:
+        actualDataNodes: ds_0.t_link_stats_today
       #################################admin-rules##############################################
       t_user:
         # 真实数据节点，比如数据库源以及数据库在数据库中真实存在的
@@ -85,24 +95,24 @@ rules:
             shardingColumn: username
             shardingAlgorithmName: group_table_hash_mod
       #################################data-ext-rules不进行分库分表##############################################
-      t_link_access_logs:
-        actualDataNodes: ds_4.t_link_access_logs
-      t_link_access_stats:
-        actualDataNodes: ds_4.t_link_access_stats
-      t_link_browser_stats:
-        actualDataNodes: ds_4.t_link_browser_stats
-      t_link_device_stats:
-        actualDataNodes: ds_4.t_link_device_stats
-      t_link_locale_stats:
-        actualDataNodes: ds_4.t_link_locale_stats
-      t_link_network_stats:
-        actualDataNodes: ds_4.t_link_network_stats
-      t_link_os_stats:
-        actualDataNodes: ds_4.t_link_os_stats
-      t_link_stats_today:
-        actualDataNodes: ds_4.t_link_stats_today
+#      t_link_access_logs:
+#        actualDataNodes: ds_4.t_link_access_logs
+#      t_link_access_stats:
+#        actualDataNodes: ds_4.t_link_access_stats
+#      t_link_browser_stats:
+#        actualDataNodes: ds_4.t_link_browser_stats
+#      t_link_device_stats:
+#        actualDataNodes: ds_4.t_link_device_stats
+#      t_link_locale_stats:
+#        actualDataNodes: ds_4.t_link_locale_stats
+#      t_link_network_stats:
+#        actualDataNodes: ds_4.t_link_network_stats
+#      t_link_os_stats:
+#        actualDataNodes: ds_4.t_link_os_stats
+#      t_link_stats_today:
+#        actualDataNodes: ds_4.t_link_stats_today
     shardingAlgorithms:
-      #################################project-shardingAlgorithms##############################################
+#################################project-shardingAlgorithms##############################################
       link_database_complex_mod:
         type: CLASS_BASED
         props:
@@ -121,14 +131,17 @@ rules:
         type: CLASS_BASED
         props:
           algorithmClassName: com.ispengya.shortlink.common.sharding.LinkCommonTableComplexAlgorithm
-          sharding-count: 6
-          table-sharding-count: 3
+          #临时更换3
+          sharding-count: 3
+          #临时更换1
+          table-sharding-count: 1
           database-count: 2
           strategy: complex
       link_goto_table_hash_mod:
         type: HASH_MOD
         props:
-          sharding-count: 6
+          #临时更换3
+          sharding-count: 3
       #################################admin-shardingAlgorithms##############################################
       user_database_hash_mod:
         type: CLASS_BASED
