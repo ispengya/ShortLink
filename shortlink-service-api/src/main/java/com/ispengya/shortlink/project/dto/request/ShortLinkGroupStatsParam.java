@@ -21,4 +21,6 @@ public class ShortLinkGroupStatsParam implements Serializable {
      * 结束日期
      */
     private String endDate;
+
+    private String username;
 }

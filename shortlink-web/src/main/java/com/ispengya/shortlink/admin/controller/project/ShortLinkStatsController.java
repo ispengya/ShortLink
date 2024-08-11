@@ -1,5 +1,6 @@
 package com.ispengya.shortlink.admin.controller.project;
 
+import com.ispengya.shortlink.admin.common.biz.UserContext;
 import com.ispengya.shortlink.common.result.PageDTO;
 import com.ispengya.shortlink.common.result.Result;
 import com.ispengya.shortlink.common.result.Results;
@@ -38,6 +39,7 @@ public class ShortLinkStatsController {
     @Operation(description = "单个短链接指定时间内监控数据")
     @GetMapping("/stats")
     public Result<ShortLinkStatsRespDTO> shortLinkStats(ShortLinkStatsParam requestParam) {
+        requestParam.setUsername(UserContext.getUsername());
         return Results.success(shortLinkStatsDubboService.oneShortLinkStats(requestParam));
     }
 
@@ -56,6 +58,7 @@ public class ShortLinkStatsController {
     @Operation(description = "单个短链接指定时间内访问记录监控数据")
     @GetMapping("stats/access-record")
     public Result<PageDTO<ShortLinkStatsAccessRecordRespDTO>> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordParam requestParam) {
+        requestParam.setUsername(UserContext.getUsername());
         return Results.success(shortLinkStatsDubboService.shortLinkStatsAccessRecord(requestParam));
     }
 

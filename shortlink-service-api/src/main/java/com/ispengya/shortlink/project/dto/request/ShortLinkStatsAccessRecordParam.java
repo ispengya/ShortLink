@@ -35,4 +35,6 @@ public class ShortLinkStatsAccessRecordParam implements Serializable {
     private Long current;
 
     private Long size;
+
+    private String username;
 }
