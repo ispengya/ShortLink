@@ -217,7 +217,7 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
     public ShortLinkCreateRespDTO createLink(ShortLinkCreateParam shortLinkCreateParam) {
         //生成短链接uri
         String shortUri = generateSuffix(shortLinkCreateParam);
-        String fullShortUrl = StrBuilder.create(shortLinkCreateParam.getDomain())
+        String fullShortUrl = StrBuilder.create(officialDomain)
                 .append("/")
                 .append(shortUri)
                 .toString();

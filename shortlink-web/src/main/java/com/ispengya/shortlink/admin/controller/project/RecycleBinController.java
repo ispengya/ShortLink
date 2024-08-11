@@ -8,6 +8,8 @@ import com.ispengya.shortlink.project.dto.request.RecycleBinRemoveParam;
 import com.ispengya.shortlink.project.dto.request.RecycleSaveParam;
 import com.ispengya.shortlink.project.dto.response.ShortLinkRespDTO;
 import com.ispengya.shortlink.project.service.RecycleBinDubboService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +23,7 @@ import java.util.List;
  * @author ispengya
  * @date 2023/12/9 16:25
  */
+@Tag(name = "链易短-回收站接口")
 @RestController
 @RequestMapping("/api/short-link/recycle-bin")
 public class RecycleBinController {
@@ -31,6 +34,7 @@ public class RecycleBinController {
     /**
      * 移至回收站
      */
+    @Operation(description = "移至回收站")
     @PostMapping("/save")
     public Result<Void> saveRecycleBin(@RequestBody RecycleSaveParam reqDTO) {
         recycleBinService.save(reqDTO);
@@ -40,6 +44,7 @@ public class RecycleBinController {
     /**
      * 分页查询回收站链接
      */
+    @Operation(description = "分页查询回收站链接")
     @GetMapping("/page")
     public Result<List<ShortLinkRespDTO>> pageList(RecycleBinPageParam reqDTO) {
         List<ShortLinkRespDTO> list = recycleBinService.pageList(reqDTO);
@@ -49,6 +54,7 @@ public class RecycleBinController {
     /**
      * 恢复短链接
      */
+    @Operation(description = "恢复短链接")
     @PostMapping("/recover")
     public Result<Void> recover(@RequestBody RecycleBinRecoverParam reqDTO){
         recycleBinService.recover(reqDTO);
@@ -58,6 +64,7 @@ public class RecycleBinController {
     /**
      * 删除回收站
      */
+    @Operation(description = "删除回收站")
     @PostMapping("/delete")
     public Result<Void> delete(@RequestBody RecycleBinRemoveParam reqDTO){
         recycleBinService.remove(reqDTO);

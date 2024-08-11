@@ -8,6 +8,9 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistration
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Configuration
 public class LoginConfig implements WebMvcConfigurer {
     @Autowired
@@ -23,5 +26,21 @@ public class LoginConfig implements WebMvcConfigurer {
                 "/{short-uri}",
                 "/test"
         );
+        // 无需拦截的接口集合
+        List<String> ignorePath = new ArrayList<>();
+        // swagger
+        ignorePath.add("/swagger-resources/**");
+        ignorePath.add("/doc.html");
+        ignorePath.add("/v3/**");
+        ignorePath.add("/webjars/**");
+        ignorePath.add("/springdoc/**");
+        ignorePath.add("/static/**");
+        ignorePath.add("/templates/**");
+        ignorePath.add("/error");
+        ignorePath.add("/cipher/check");
+        ignorePath.add("/manager/login");
+        ignorePath.add("/swagger-ui.html");
+        //先拦截认证，再拦截授权
+        registration.excludePathPatterns(ignorePath);
     }
 }

@@ -6,7 +6,7 @@ short-link:
     locale:
       amap-key: c5fc20eb970fc6617f328f59e48203e1
   official:
-    domain: url.cn
+    domain: cn.zaizaige.top
 
 dubbo:
   application:

@@ -9,6 +9,10 @@ import com.ispengya.shortlink.project.dto.response.ShortLinkCreateRespDTO;
 import com.ispengya.shortlink.project.dto.response.ShortLinkGroupCountQueryRespDTO;
 import com.ispengya.shortlink.project.dto.response.ShortLinkRespDTO;
 import com.ispengya.shortlink.project.service.ShortLinkDubboService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,6 +29,7 @@ import java.util.List;
  * @author ispengya
  * @date 2023/11/25 14:21
  */
+@Tag(name = "链易短-链接核心接口")
 @RestController
 public class ShortLinkController {
 
@@ -36,6 +41,7 @@ public class ShortLinkController {
     /**
      * 新增短链接
      */
+    @Operation(description = "新增短链接")
     @PostMapping("/api/short-link/project/link")
     public Result<ShortLinkCreateRespDTO> createLink(@Valid @RequestBody ShortLinkCreateParam shortLinkCreateParam) {
         ShortLinkCreateRespDTO shortLinkCreateRespDTO = shortLinkDubboService.createLink(shortLinkCreateParam);
@@ -45,6 +51,7 @@ public class ShortLinkController {
     /**
      * 修改短链接
      */
+    @Operation(description = "修改短链接")
     @PutMapping("/api/short-link/project/link")
     public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateParam shortLinkUpdateParam){
         shortLinkDubboService.updateShortLink(shortLinkUpdateParam);
@@ -54,6 +61,7 @@ public class ShortLinkController {
     /**
      * 分页查询短链接
      */
+    @Operation(description = "分页查询短链接")
     @GetMapping("/api/short-link/project/page/link")
     public Result<List<ShortLinkRespDTO>> pageLink(ShortLinkPageParam shortLinkPageParam) {
         List<ShortLinkRespDTO> list = shortLinkDubboService.pageLink(shortLinkPageParam);
@@ -63,8 +71,9 @@ public class ShortLinkController {
     /**
      * 查寻分组下的短链接数量
      */
+    @Operation(description = "查寻分组下的短链接数量")
     @GetMapping("/api/short-link/project/page/linkCount")
-    public Result<List<ShortLinkGroupCountQueryRespDTO>> listGroupLinkCount(@RequestParam("gid") String[] gid, @RequestParam("username") String username) {
+    public Result<List<ShortLinkGroupCountQueryRespDTO>> listGroupLinkCount(@Parameter(schema = @Schema(defaultValue = "wvgikz")) @RequestParam("gid") String[] gid, @Parameter(schema = @Schema(defaultValue = "zaizaige1"))@RequestParam("username") String username) {
         List<String> list = Arrays.asList(gid);
         List<ShortLinkGroupCountQueryRespDTO> dtoList = shortLinkDubboService.listGroupLinkCount(list, username);
         return Results.success(dtoList);
