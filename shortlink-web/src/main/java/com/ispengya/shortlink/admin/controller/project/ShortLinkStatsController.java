@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springdoc.core.annotations.RouterOperations;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "链易短-链接统计接口")
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/short-link/admin/v1")
 public class ShortLinkStatsController {
 
     @DubboReference
@@ -34,7 +36,7 @@ public class ShortLinkStatsController {
      * 访问单个短链接指定时间内监控数据
      */
     @Operation(description = "单个短链接指定时间内监控数据")
-    @GetMapping("/api/short-link/v1/stats")
+    @GetMapping("/stats")
     public Result<ShortLinkStatsRespDTO> shortLinkStats(ShortLinkStatsParam requestParam) {
         return Results.success(shortLinkStatsDubboService.oneShortLinkStats(requestParam));
     }
@@ -52,7 +54,7 @@ public class ShortLinkStatsController {
      * 访问单个短链接指定时间内访问记录监控数据
      */
     @Operation(description = "单个短链接指定时间内访问记录监控数据")
-    @GetMapping("/api/short-link/v1/stats/access-record")
+    @GetMapping("stats/access-record")
     public Result<PageDTO<ShortLinkStatsAccessRecordRespDTO>> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordParam requestParam) {
         return Results.success(shortLinkStatsDubboService.shortLinkStatsAccessRecord(requestParam));
     }

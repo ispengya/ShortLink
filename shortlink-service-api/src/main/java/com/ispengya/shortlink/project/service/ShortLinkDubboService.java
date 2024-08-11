@@ -1,8 +1,10 @@
 package com.ispengya.shortlink.project.service;
 
+import com.ispengya.shortlink.project.dto.request.ShortLinkBatchCreateParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkCreateParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkPageParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkUpdateParam;
+import com.ispengya.shortlink.project.dto.response.ShortLinkBatchCreateRespDTO;
 import com.ispengya.shortlink.project.dto.response.ShortLinkCreateRespDTO;
 import com.ispengya.shortlink.project.dto.response.ShortLinkGroupCountQueryRespDTO;
 import com.ispengya.shortlink.project.dto.response.ShortLinkRespDTO;
@@ -63,4 +65,12 @@ public interface ShortLinkDubboService {
      * @return
      */
     List<ShortLinkGroupCountQueryRespDTO> listGroupLinkCount(List<String> requestParam, String username);
+
+    /**
+     * 批量创建短链接
+     *
+     * @param requestParam 批量创建短链接请求参数
+     * @return 批量创建短链接返回参数
+     */
+    ShortLinkBatchCreateRespDTO batchCreateShortLink(ShortLinkBatchCreateParam requestParam);
 }

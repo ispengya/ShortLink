@@ -20,8 +20,8 @@ public class LoginConfig implements WebMvcConfigurer {
         InterceptorRegistration registration = registry.addInterceptor(new UserLoginInterceptor(stringRedisTemplate));
         registration.addPathPatterns("/**"); //所有路径都被拦截
         registration.excludePathPatterns(    //添加不拦截路径
-                "/api/short-link/admin/login",
-                "/api/short-link/admin/register",
+                "/api/short-link/admin/v1/user/login",
+                "/api/short-link/admin/v1/user",
                 "/page/notfound",
                 "/{short-uri}",
                 "/test"

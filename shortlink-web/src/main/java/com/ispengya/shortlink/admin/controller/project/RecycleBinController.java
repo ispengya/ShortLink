@@ -1,5 +1,6 @@
 package com.ispengya.shortlink.admin.controller.project;
 
+import com.ispengya.shortlink.admin.common.biz.UserContext;
 import com.ispengya.shortlink.common.result.Result;
 import com.ispengya.shortlink.common.result.Results;
 import com.ispengya.shortlink.project.dto.request.RecycleBinPageParam;
@@ -25,7 +26,7 @@ import java.util.List;
  */
 @Tag(name = "链易短-回收站接口")
 @RestController
-@RequestMapping("/api/short-link/recycle-bin")
+@RequestMapping("/api/short-link/admin/v1")
 public class RecycleBinController {
 
     @DubboReference
@@ -35,8 +36,9 @@ public class RecycleBinController {
      * 移至回收站
      */
     @Operation(description = "移至回收站")
-    @PostMapping("/save")
+    @PostMapping("/recycle-bin/save")
     public Result<Void> saveRecycleBin(@RequestBody RecycleSaveParam reqDTO) {
+        reqDTO.setUsername(UserContext.getUsername());
         recycleBinService.save(reqDTO);
         return Results.success();
     }
@@ -45,8 +47,9 @@ public class RecycleBinController {
      * 分页查询回收站链接
      */
     @Operation(description = "分页查询回收站链接")
-    @GetMapping("/page")
+    @GetMapping("/recycle-bin/page")
     public Result<List<ShortLinkRespDTO>> pageList(RecycleBinPageParam reqDTO) {
+        reqDTO.setUsername(UserContext.getUsername());
         List<ShortLinkRespDTO> list = recycleBinService.pageList(reqDTO);
         return Results.success(list);
     }
@@ -55,8 +58,9 @@ public class RecycleBinController {
      * 恢复短链接
      */
     @Operation(description = "恢复短链接")
-    @PostMapping("/recover")
+    @PostMapping("/recycle-bin/recover")
     public Result<Void> recover(@RequestBody RecycleBinRecoverParam reqDTO){
+        reqDTO.setUsername(UserContext.getUsername());
         recycleBinService.recover(reqDTO);
         return Results.success();
     }
@@ -65,8 +69,9 @@ public class RecycleBinController {
      * 删除回收站
      */
     @Operation(description = "删除回收站")
-    @PostMapping("/delete")
+    @PostMapping("/recycle-bin/remove")
     public Result<Void> delete(@RequestBody RecycleBinRemoveParam reqDTO){
+        reqDTO.setUsername(UserContext.getUsername());
         recycleBinService.remove(reqDTO);
         return Results.success();
     }

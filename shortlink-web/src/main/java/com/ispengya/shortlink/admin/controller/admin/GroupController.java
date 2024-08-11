@@ -28,7 +28,7 @@ import java.util.List;
  */
 @Tag(name = "链易短-链接分组接口")
 @RestController
-@RequestMapping("/api/short-link/admin")
+@RequestMapping("/api/short-link/admin/v1")
 public class GroupController {
     @DubboReference
     private GroupDubboService groupDubboService;
@@ -36,7 +36,7 @@ public class GroupController {
     /**
      * 添加分组
      */
-    @PostMapping("/auth/group")
+    @PostMapping("/group")
     @Operation(description = "添加分组")
     public Result<Void> save(@Valid @RequestBody GroupAddParam param){
         groupDubboService.saveGroup(param);
@@ -47,7 +47,7 @@ public class GroupController {
      * 查询短链接分组集合
      */
     @Operation(description = "查询短链接分组集合")
-    @GetMapping("/auth/group")
+    @GetMapping("/group")
     public Result<List<GroupListRespDTO>> list(){
         return Results.success(groupDubboService.searchGroupList());
     }
@@ -56,7 +56,7 @@ public class GroupController {
      * 排序分组
      */
     @Operation(description = "排序分组")
-    @PutMapping("/auth/group/sort")
+    @PutMapping("/group/sort")
     public Result<Void> sort(@RequestBody List<GroupSortParam> reqDTOList){
 //        groupService.sort(reqDTOList);
         return Results.success();
@@ -66,7 +66,7 @@ public class GroupController {
      * 修改短链接分组名称
      */
     @Operation(description = "修改短链接分组名称")
-    @PutMapping("/auth/group")
+    @PutMapping("/group")
     public Result<Void> updateGroup(@RequestBody GroupUpdateParam requestParam) {
         groupDubboService.updateGroup(requestParam);
         return Results.success();
@@ -76,7 +76,7 @@ public class GroupController {
      * 删除短链接分组
      */
     @Operation(description = "删除短链接分组")
-    @DeleteMapping("/auth/group")
+    @DeleteMapping("/group")
     public Result<Void> deleteGroup(@RequestParam String gid) {
         groupDubboService.deleteGroup(gid);
         return Results.success();

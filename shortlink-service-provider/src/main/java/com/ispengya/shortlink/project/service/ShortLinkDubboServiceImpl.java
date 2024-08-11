@@ -1,5 +1,6 @@
 package com.ispengya.shortlink.project.service;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.text.StrBuilder;
 import cn.hutool.core.util.StrUtil;
@@ -22,12 +23,11 @@ import com.ispengya.shortlink.project.dao.core.ShortLinkDao;
 import com.ispengya.shortlink.project.dao.core.ShortLinkGoToDao;
 import com.ispengya.shortlink.project.domain.ShortLinkDO;
 import com.ispengya.shortlink.project.domain.ShortLinkGotoDO;
+import com.ispengya.shortlink.project.dto.request.ShortLinkBatchCreateParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkCreateParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkPageParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkUpdateParam;
-import com.ispengya.shortlink.project.dto.response.ShortLinkCreateRespDTO;
-import com.ispengya.shortlink.project.dto.response.ShortLinkGroupCountQueryRespDTO;
-import com.ispengya.shortlink.project.dto.response.ShortLinkRespDTO;
+import com.ispengya.shortlink.project.dto.response.*;
 import com.ispengya.shortlink.project.mq.producer.LinkStatsProducer;
 import com.ispengya.shortlink.project.util.HashUtil;
 import com.ispengya.shortlink.project.util.LinkUtil;
@@ -51,11 +51,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -347,6 +343,33 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
     public List<ShortLinkGroupCountQueryRespDTO> listGroupLinkCount(List<String> requestParam, String username) {
         //查询gid对应数量
         return shortLinkDao.getGroupLinkCount(requestParam, username);
+    }
+
+    @Override
+    public ShortLinkBatchCreateRespDTO batchCreateShortLink(ShortLinkBatchCreateParam requestParam) {
+        List<String> originUrls = requestParam.getOriginUrls();
+        List<String> describes = requestParam.getDescribes();
+        List<ShortLinkBaseInfoRespDTO> result = new ArrayList<>();
+        for (int i = 0; i < originUrls.size(); i++) {
+            ShortLinkCreateParam shortLinkCreateReqDTO = BeanUtil.toBean(requestParam, ShortLinkCreateParam.class);
+            shortLinkCreateReqDTO.setOriginUrl(originUrls.get(i));
+            shortLinkCreateReqDTO.setDescribe(describes.get(i));
+            try {
+                ShortLinkCreateRespDTO shortLink = createLink(shortLinkCreateReqDTO);
+                ShortLinkBaseInfoRespDTO linkBaseInfoRespDTO = ShortLinkBaseInfoRespDTO.builder()
+                        .fullShortUrl(shortLink.getFullShortUrl())
+                        .originUrl(shortLink.getOriginUrl())
+                        .describe(describes.get(i))
+                        .build();
+                result.add(linkBaseInfoRespDTO);
+            } catch (Throwable ex) {
+                log.error("批量创建短链接失败，原始参数：{}", originUrls.get(i));
+            }
+        }
+        return ShortLinkBatchCreateRespDTO.builder()
+                .total(result.size())
+                .baseLinkInfos(result)
+                .build();
     }
 
     private String generateSuffix(ShortLinkCreateParam dto) {

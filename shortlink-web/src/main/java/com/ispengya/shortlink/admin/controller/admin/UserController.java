@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Tag(name = "链易短-用户接口")
 @RestController
-@RequestMapping("/api/short-link/admin")
+@RequestMapping("/api/short-link/admin/v1")
 public class UserController {
 
     @DubboReference
@@ -39,8 +39,8 @@ public class UserController {
      * 获取用户信息
      */
     @Operation(summary = "获取用户信息")
-    @GetMapping("/auth/userInfo/{username}")
-    public Result<UserInfoRespDTO> getUserByName(@PathVariable("username") @Parameter(description = "用户名") String username) {
+    @GetMapping("/actual/user/{username}")
+    public Result<UserInfoRespDTO> getUserByName(@PathVariable("username") String username) {
         UserInfoRespDTO userInfoRespDTO = userDubboService.getUserByUserName(username);
         return Results.success(userInfoRespDTO);
     }
@@ -49,7 +49,7 @@ public class UserController {
      * 注册用户
      */
     @Operation(summary = "注册用户")
-    @PostMapping("/register")
+    @PostMapping("/user")
     public Result<Void> register(@RequestBody @Valid UserRegisterParam userRegisterParam) {
         userDubboService.register(userRegisterParam);
         return Results.success();
@@ -59,7 +59,7 @@ public class UserController {
      * 修改个人信息
      */
     @Operation(summary = "修改个人信息")
-    @PutMapping("/auth/admin/userInfo")
+    @PutMapping("/user")
     public Result<Void> update(@RequestBody UserUpdateParam userUpdateParam) {
         userDubboService.updateUserInfo(userUpdateParam);
         return Results.success();
@@ -69,7 +69,7 @@ public class UserController {
      * 登录
      */
     @Operation(summary = "登录")
-    @PostMapping("login")
+    @PostMapping("/user/login")
     public Result<UserLoginRespDTO> login(@RequestBody @Valid UserLoginParam userLoginParam) {
         UserLoginRespDTO userLoginRespDTO = userDubboService.login(userLoginParam);
         return Results.success(userLoginRespDTO);
@@ -79,7 +79,7 @@ public class UserController {
      * 登出
      */
     @Operation(summary = "登出")
-    @GetMapping("logout")
+    @GetMapping("/user/logout")
     public Result<Void> logout(@RequestParam("username") String username, @RequestParam("token") String token) {
         userDubboService.logout(username, token);
         return Results.success();
@@ -89,7 +89,7 @@ public class UserController {
      * 判断用户是否登录
      */
     @Operation(summary = "是否登录")
-    @GetMapping("/isLogin")
+    @GetMapping("/user/has-username")
     public Result<Boolean> isLogin(@RequestParam("username") String username) {
         Boolean isLogin = userDubboService.checkLogin(username);
         return Results.success(isLogin);
