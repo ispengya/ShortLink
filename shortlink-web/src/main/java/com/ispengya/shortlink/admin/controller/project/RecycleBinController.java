@@ -1,6 +1,7 @@
 package com.ispengya.shortlink.admin.controller.project;
 
 import com.ispengya.shortlink.admin.common.biz.UserContext;
+import com.ispengya.shortlink.common.result.PageDTO;
 import com.ispengya.shortlink.common.result.Result;
 import com.ispengya.shortlink.common.result.Results;
 import com.ispengya.shortlink.project.dto.request.RecycleBinPageParam;
@@ -29,7 +30,7 @@ import java.util.List;
 @RequestMapping("/api/short-link/admin/v1")
 public class RecycleBinController {
 
-    @DubboReference
+    @DubboReference(retries = 0)
     private RecycleBinDubboService recycleBinService;
 
     /**
@@ -48,10 +49,9 @@ public class RecycleBinController {
      */
     @Operation(description = "分页查询回收站链接")
     @GetMapping("/recycle-bin/page")
-    public Result<List<ShortLinkRespDTO>> pageList(RecycleBinPageParam reqDTO) {
+    public Result<PageDTO<ShortLinkRespDTO>> pageList(RecycleBinPageParam reqDTO) {
         reqDTO.setUsername(UserContext.getUsername());
-        List<ShortLinkRespDTO> list = recycleBinService.pageList(reqDTO);
-        return Results.success(list);
+        return Results.success( recycleBinService.pageList(reqDTO));
     }
 
     /**

@@ -30,7 +30,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/short-link/admin/v1")
 public class GroupController {
-    @DubboReference
+    @DubboReference(retries = 0)
     private GroupDubboService groupDubboService;
 
     /**

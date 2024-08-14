@@ -39,5 +39,5 @@ public class ShortLinkPageParam implements Serializable {
      * 页大小
      */
     @Schema(defaultValue = "10")
-    private Long pageSize;
+    private Long size;
 }

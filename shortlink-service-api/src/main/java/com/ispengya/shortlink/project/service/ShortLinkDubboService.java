@@ -1,5 +1,6 @@
 package com.ispengya.shortlink.project.service;
 
+import com.ispengya.shortlink.common.result.PageDTO;
 import com.ispengya.shortlink.project.dto.request.ShortLinkBatchCreateParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkCreateParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkPageParam;
@@ -56,7 +57,7 @@ public interface ShortLinkDubboService {
      * @param shortLinkPageParam
      * @return
      */
-    List<ShortLinkRespDTO> pageLink(ShortLinkPageParam shortLinkPageParam);
+    PageDTO<ShortLinkRespDTO> pageLink(ShortLinkPageParam shortLinkPageParam);
 
     /**
      * 查询分组下的连接数量

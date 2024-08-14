@@ -18,6 +18,7 @@ import com.ispengya.shortlink.common.converter.ShortLinkConverter;
 import com.ispengya.shortlink.common.enums.ValidTypeEnum;
 import com.ispengya.shortlink.common.enums.YesOrNoEnum;
 import com.ispengya.shortlink.common.exception.ServiceException;
+import com.ispengya.shortlink.common.result.PageDTO;
 import com.ispengya.shortlink.common.util.AssertUtil;
 import com.ispengya.shortlink.project.dao.core.ShortLinkDao;
 import com.ispengya.shortlink.project.dao.core.ShortLinkGoToDao;
@@ -213,7 +214,7 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
     public ShortLinkCreateRespDTO createLink(ShortLinkCreateParam shortLinkCreateParam) {
         //生成短链接uri
         String shortUri = generateSuffix(shortLinkCreateParam);
-        String fullShortUrl = StrBuilder.create(officialDomain)
+        String fullShortUrl = StrBuilder.create(shortLinkCreateParam.getDomain())
                 .append("/")
                 .append(shortUri)
                 .toString();
@@ -318,11 +319,11 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
     }
 
     @Override
-    public List<ShortLinkRespDTO> pageLink(ShortLinkPageParam shortLinkPageParam) {
+    public PageDTO<ShortLinkRespDTO> pageLink(ShortLinkPageParam shortLinkPageParam) {
         IPage<ShortLinkDO> linkPage = shortLinkDao.pageLinkList(shortLinkPageParam);
         List<ShortLinkDO> links = Optional.ofNullable(linkPage).map(IPage::getRecords).get();
         if (CollUtil.isNotEmpty(links)) {
-            return links.stream()
+            List<ShortLinkRespDTO> shortLinkRespDTOS = links.stream()
                     .map(shortLink -> {
                         ShortLinkRespDTO shortLinkRespDTO = BeanConverter.CONVERTER.converterLink1(shortLink);
                         //判断domain是否是自定义的
@@ -333,10 +334,16 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
                             shortLinkRespDTO.setFullShortUrl("http://" + shortLink.getFullShortUrl());
                         }
                         return shortLinkRespDTO;
-                    })
-                    .collect(Collectors.toList());
+                    }).toList();
+            PageDTO<ShortLinkRespDTO> pageDTO =new PageDTO<>();
+            pageDTO.setRecords(shortLinkRespDTOS);
+            pageDTO.setPages(linkPage.getPages());
+            pageDTO.setSize(linkPage.getSize());
+            pageDTO.setTotal(linkPage.getTotal());
+            pageDTO.setCurrent(linkPage.getCurrent());
+            return pageDTO;
         }
-        return Collections.EMPTY_LIST;
+        return null;
     }
 
     @Override

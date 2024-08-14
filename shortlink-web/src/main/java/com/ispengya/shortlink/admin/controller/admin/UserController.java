@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/short-link/admin/v1")
 public class UserController {
 
-    @DubboReference
+    @DubboReference(retries = 0)
     private UserDubboService userDubboService;
 
 

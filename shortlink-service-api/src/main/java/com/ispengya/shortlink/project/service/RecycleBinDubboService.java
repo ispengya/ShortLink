@@ -1,5 +1,6 @@
 package com.ispengya.shortlink.project.service;
 
+import com.ispengya.shortlink.common.result.PageDTO;
 import com.ispengya.shortlink.project.dto.request.RecycleBinPageParam;
 import com.ispengya.shortlink.project.dto.request.RecycleBinRecoverParam;
 import com.ispengya.shortlink.project.dto.request.RecycleBinRemoveParam;
@@ -25,7 +26,7 @@ public interface RecycleBinDubboService {
      * @param reqDTO
      * @return
      */
-    List<ShortLinkRespDTO> pageList(RecycleBinPageParam reqDTO);
+    PageDTO<ShortLinkRespDTO> pageList(RecycleBinPageParam reqDTO);
 
     /**
      * 恢复短链接

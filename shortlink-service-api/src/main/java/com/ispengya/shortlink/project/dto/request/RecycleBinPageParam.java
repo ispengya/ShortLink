@@ -23,5 +23,5 @@ public class RecycleBinPageParam implements Serializable {
     /**
      * 页大小
      */
-    private Long pageSize;
+    private Long size;
 }

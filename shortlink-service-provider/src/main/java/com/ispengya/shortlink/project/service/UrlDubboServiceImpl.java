@@ -6,8 +6,10 @@ import org.apache.dubbo.config.annotation.DubboService;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -42,7 +44,7 @@ public class UrlDubboServiceImpl implements UrlDubboService {
         if (urlDocument==null){
             return "Undefined";
         }
-        String image = getImage(url, urlDocument);
+        String image = getImage(url);
         if (StrUtil.isNotBlank(image)){
             return image;
         }else {
@@ -68,20 +70,37 @@ public class UrlDubboServiceImpl implements UrlDubboService {
         }
     }
 
-    private String getImage(String url, Document document) {
-        String image = document.select("link[type=image/x-icon]").attr("href");
-        //如果没有去匹配含有icon属性的logo
-        String href = StrUtil.isEmpty(image) ? document.select("link[rel$=icon]").attr("href") : image;
-        //如果url已经包含了logo
-        if (StrUtil.containsAny(url, "favicon")) {
-            return url;
+    private String getImage(String url) {
+//        String image = document.select("link[type=image/x-icon]").attr("href");
+//        //如果没有去匹配含有icon属性的logo
+//        String href = StrUtil.isEmpty(image) ? document.select("link[rel$=icon]").attr("href") : image;
+//        //如果url已经包含了logo
+//        if (StrUtil.containsAny(url, "favicon")) {
+//            return url;
+//        }
+//        //如果icon可以直接访问或者包含了http
+//        if (isConnect(!StrUtil.startWith(href, "http") ? href="http"+href : href)) {
+//            return href;
+//        }
+//
+//        return StrUtil.format("{}/{}", url, StrUtil.removePrefix(href, "/"));
+        try {
+            URL targetUrl = new URL(url);
+            HttpURLConnection connection = (HttpURLConnection) targetUrl.openConnection();
+            connection.setRequestMethod("GET");
+            connection.connect();
+            int responseCode = connection.getResponseCode();
+            if (HttpURLConnection.HTTP_OK == responseCode) {
+                Document document = Jsoup.connect(url).get();
+                Element faviconLink = document.select("link[rel~=(?i)^(shortcut )?icon]").first();
+                if (faviconLink != null) {
+                    return faviconLink.attr("abs:href");
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        //如果icon可以直接访问或者包含了http
-        if (isConnect(!StrUtil.startWith(href, "http") ? href="http"+href : href)) {
-            return href;
-        }
-
-        return StrUtil.format("{}/{}", url, StrUtil.removePrefix(href, "/"));
+        return null;
     }
 
     private static boolean isConnect(String href) {

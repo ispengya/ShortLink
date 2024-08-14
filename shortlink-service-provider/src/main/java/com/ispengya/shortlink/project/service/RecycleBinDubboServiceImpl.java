@@ -8,6 +8,7 @@ import com.ispengya.shortlink.common.constant.ShortLinkConstant;
 import com.ispengya.shortlink.common.converter.BeanConverter;
 import com.ispengya.shortlink.common.enums.ValidTypeEnum;
 import com.ispengya.shortlink.common.enums.YesOrNoEnum;
+import com.ispengya.shortlink.common.result.PageDTO;
 import com.ispengya.shortlink.project.dao.core.ShortLinkDao;
 import com.ispengya.shortlink.project.dao.core.ShortLinkGoToDao;
 import com.ispengya.shortlink.project.domain.ShortLinkDO;
@@ -57,11 +58,11 @@ public class RecycleBinDubboServiceImpl implements RecycleBinDubboService {
     }
 
     @Override
-    public List<ShortLinkRespDTO> pageList(RecycleBinPageParam reqDTO) {
+    public PageDTO<ShortLinkRespDTO> pageList(RecycleBinPageParam reqDTO) {
         IPage<ShortLinkDO> linkPage = shortLinkDao.pageRecycleOfLink(reqDTO);
         List<ShortLinkDO> links = Optional.ofNullable(linkPage).map(IPage::getRecords).get();
         if (CollUtil.isNotEmpty(links)) {
-            return links.stream()
+            List<ShortLinkRespDTO> shortLinkRespDTOS = links.stream()
                     .map(shortLink -> {
                         ShortLinkRespDTO shortLinkRespDTO = BeanConverter.CONVERTER.converterLink1(shortLink);
                         //判断domain是否是自定义的
@@ -72,10 +73,16 @@ public class RecycleBinDubboServiceImpl implements RecycleBinDubboService {
                             shortLinkRespDTO.setFullShortUrl("http://" + shortLink.getFullShortUrl());
                         }
                         return shortLinkRespDTO;
-                    })
-                    .collect(Collectors.toList());
+                    }).toList();
+            PageDTO<ShortLinkRespDTO> pageDTO =new PageDTO<>();
+            pageDTO.setRecords(shortLinkRespDTOS);
+            pageDTO.setPages(linkPage.getPages());
+            pageDTO.setSize(linkPage.getSize());
+            pageDTO.setTotal(linkPage.getTotal());
+            pageDTO.setCurrent(linkPage.getCurrent());
+            return pageDTO;
         }
-        return Collections.EMPTY_LIST;
+        return null;
     }
 
     @Override

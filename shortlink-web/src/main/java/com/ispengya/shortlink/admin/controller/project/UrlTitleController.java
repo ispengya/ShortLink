@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/short-link/admin/v1")
 public class UrlTitleController {
-    @DubboReference
+    @DubboReference(retries = 0)
     private UrlDubboService urlService;
 
     /**

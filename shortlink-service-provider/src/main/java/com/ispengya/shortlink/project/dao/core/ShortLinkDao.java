@@ -28,7 +28,7 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLinkDO> {
     private final ShortLinkMapper shortLinkMapper;
 
     public IPage<ShortLinkDO> pageLinkList(ShortLinkPageParam shortLinkPageParam) {
-        IPage<ShortLinkDO> page = new Page<>(shortLinkPageParam.getCurrent(), shortLinkPageParam.getPageSize());
+        IPage<ShortLinkDO> page = new Page<>(shortLinkPageParam.getCurrent(), shortLinkPageParam.getSize());
         LambdaQueryWrapper<ShortLinkDO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ShortLinkDO::getGid, shortLinkPageParam.getGid());
         queryWrapper.eq(ShortLinkDO::getUsername, shortLinkPageParam.getUsername());
@@ -86,7 +86,7 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLinkDO> {
     }
 
     public IPage<ShortLinkDO> pageRecycleOfLink(RecycleBinPageParam reqDTO) {
-        IPage<ShortLinkDO> page = new Page<>(reqDTO.getCurrent(), reqDTO.getPageSize());
+        IPage<ShortLinkDO> page = new Page<>(reqDTO.getCurrent(), reqDTO.getSize());
         LambdaQueryWrapper<ShortLinkDO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ShortLinkDO::getUsername, reqDTO.getUsername());
         queryWrapper.eq(ShortLinkDO::getEnableStatus, YesOrNoEnum.NO.getCode());

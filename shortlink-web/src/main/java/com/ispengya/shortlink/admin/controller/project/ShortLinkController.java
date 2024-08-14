@@ -1,6 +1,7 @@
 package com.ispengya.shortlink.admin.controller.project;
 
 import com.ispengya.shortlink.admin.common.biz.UserContext;
+import com.ispengya.shortlink.common.result.PageDTO;
 import com.ispengya.shortlink.common.result.Result;
 import com.ispengya.shortlink.common.result.Results;
 import com.ispengya.shortlink.project.dto.request.ShortLinkCreateParam;
@@ -30,7 +31,7 @@ import java.util.List;
 @RequestMapping("/api/short-link/admin/v1")
 public class ShortLinkController {
 
-    @DubboReference
+    @DubboReference(retries = 0)
     private ShortLinkDubboService shortLinkDubboService;
 
 
@@ -62,10 +63,9 @@ public class ShortLinkController {
      */
     @Operation(description = "分页查询短链接")
     @GetMapping("/page")
-    public Result<List<ShortLinkRespDTO>> pageLink(ShortLinkPageParam shortLinkPageParam) {
+    public Result<PageDTO<ShortLinkRespDTO>> pageLink(ShortLinkPageParam shortLinkPageParam) {
         shortLinkPageParam.setUsername(UserContext.getUsername());
-        List<ShortLinkRespDTO> list = shortLinkDubboService.pageLink(shortLinkPageParam);
-        return Results.success(list);
+        return Results.success(shortLinkDubboService.pageLink(shortLinkPageParam));
     }
 
     /**
