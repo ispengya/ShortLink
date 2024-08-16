@@ -15,7 +15,7 @@
             AND tl.username = #{param.username}
             AND tl.del_flag = '0'
             AND tl.enable_status = #{param.enableStatus}
-            AND tlbs.date BETWEEN #{param.startDate} and #{param.endDate}
+            AND tlbs.create_time BETWEEN #{param.startDate} and #{param.endDate}
         GROUP BY
             tlbs.full_short_url, tl.gid, tlbs.browser
     </select>

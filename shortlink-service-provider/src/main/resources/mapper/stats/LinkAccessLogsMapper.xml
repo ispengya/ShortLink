@@ -17,14 +17,14 @@
           AND tl.username = #{param.username}
           AND tl.del_flag = '0'
           AND tl.enable_status = #{param.enableStatus}
-          AND tlal.date BETWEEN #{param.startDate} and #{param.endDate}
+          AND tlal.create_time BETWEEN #{param.startDate} and #{param.endDate}
         GROUP BY tlal.full_short_url, tl.gid
     </select>
     
     <select id="listTopIpByShortLink" resultType="java.util.HashMap">
         SELECT
             tlal.ip,
-            COUNT(tlal.ip) AS cntIp
+            COUNT(tlal.ip) AS count
         FROM
             t_link tl INNER JOIN
             t_link_access_logs tlal ON tl.full_short_url = tlal.full_short_url
@@ -37,7 +37,7 @@
             AND tlal.create_time BETWEEN #{param.startDate} and #{param.endDate}
         GROUP BY
             tlal.full_short_url, tl.gid, tlal.ip
-        ORDER BY cntIp DESC
+        ORDER BY count DESC
         LIMIT 5
     </select>
     

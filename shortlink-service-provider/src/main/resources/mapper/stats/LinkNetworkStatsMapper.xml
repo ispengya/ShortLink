@@ -16,7 +16,7 @@
             AND tl.username = #{param.username}
             AND tl.del_flag = '0'
             AND tl.enable_status = #{param.enableStatus}
-            AND tlns.date BETWEEN #{param.startDate} and #{param.endDate}
+            AND tlns.create_time BETWEEN #{param.startDate} and #{param.endDate}
         GROUP BY
             tlns.full_short_url, tl.gid, tlns.network
     </select>

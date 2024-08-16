@@ -65,6 +65,7 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
             "WHERE " +
             "    tlal.full_short_url = #{fullShortUrl} " +
             "    AND tl.gid = #{gid} " +
+            "    AND tl.username = #{username}" +
             "    AND tl.del_flag = '0' " +
             "    AND tl.enable_status = #{enableStatus} " +
             "    AND tlal.user IN " +
@@ -76,6 +77,7 @@ public interface LinkAccessLogsMapper extends BaseMapper<LinkAccessLogsDO> {
             "</script>")
     List<Map<String, Object>> selectUvTypeByUsers(
             @Param("gid") String gid,
+            @Param("username") String username,
             @Param("fullShortUrl") String fullShortUrl,
             @Param("enableStatus") Integer enableStatus,
             @Param("startDate") String startDate,

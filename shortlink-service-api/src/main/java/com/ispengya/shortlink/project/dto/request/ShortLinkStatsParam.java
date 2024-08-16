@@ -30,6 +30,6 @@ public class ShortLinkStatsParam implements Serializable {
     /**
      * 启用标识 0：启用 1：未启用
      */
-    private Integer enableStatus;
+    private Integer enableStatus = 0;
     private String username;
 }

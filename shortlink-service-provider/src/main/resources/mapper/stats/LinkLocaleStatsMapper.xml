@@ -14,7 +14,7 @@
             AND tl.username = #{param.username}
             AND tl.del_flag = '0'
             AND tl.enable_status = #{param.enableStatus}
-            AND tlls.date BETWEEN #{param.startDate} and #{param.endDate}
+            AND tlls.create_time BETWEEN #{param.startDate} and #{param.endDate}
         GROUP BY  tlls.full_short_url, tl.gid, tlls.province
     </select>
 </mapper>

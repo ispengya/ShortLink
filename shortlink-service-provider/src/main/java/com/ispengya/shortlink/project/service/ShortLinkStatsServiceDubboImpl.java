@@ -435,6 +435,7 @@ public class ShortLinkStatsServiceDubboImpl implements ShortLinkStatsDubboServic
                 .toList();
         List<Map<String, Object>> uvTypeList = linkAccessLogsMapper.selectUvTypeByUsers(
                 requestParam.getGid(),
+                requestParam.getUsername(),
                 requestParam.getFullShortUrl(),
                 requestParam.getEnableStatus(),
                 requestParam.getStartDate(),
