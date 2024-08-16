@@ -332,9 +332,9 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
                         //判断domain是否是自定义的
                         if (shortLink.getDomain().equals(officialDomain)) {
                             //TODO 真正上线是https
-                            shortLinkRespDTO.setFullShortUrl("http://" + shortLink.getFullShortUrl());
+                            shortLinkRespDTO.setFullShortUrl(shortLink.getFullShortUrl());
                         } else {
-                            shortLinkRespDTO.setFullShortUrl("http://" + shortLink.getFullShortUrl());
+                            shortLinkRespDTO.setFullShortUrl(shortLink.getFullShortUrl());
                         }
                         return shortLinkRespDTO;
                     }).toList();

@@ -21,7 +21,6 @@ public class ShortLinkBatchCreateParam {
      * 描述集合
      */
     private List<String> describes;
-    private String username;
 
     /**
      * 分组标识

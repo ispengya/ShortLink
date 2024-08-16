@@ -1,12 +1,16 @@
 package com.ispengya.shortlink.admin.controller.project;
 
 import com.ispengya.shortlink.admin.common.biz.UserContext;
+import com.ispengya.shortlink.admin.common.util.EasyExcelWebUtil;
 import com.ispengya.shortlink.common.result.PageDTO;
 import com.ispengya.shortlink.common.result.Result;
 import com.ispengya.shortlink.common.result.Results;
+import com.ispengya.shortlink.project.dto.request.ShortLinkBatchCreateParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkCreateParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkPageParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkUpdateParam;
+import com.ispengya.shortlink.project.dto.response.ShortLinkBaseInfoRespDTO;
+import com.ispengya.shortlink.project.dto.response.ShortLinkBatchCreateRespDTO;
 import com.ispengya.shortlink.project.dto.response.ShortLinkCreateRespDTO;
 import com.ispengya.shortlink.project.dto.response.ShortLinkGroupCountQueryRespDTO;
 import com.ispengya.shortlink.project.dto.response.ShortLinkRespDTO;
@@ -15,12 +19,15 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import lombok.SneakyThrows;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * @author ispengya
@@ -77,6 +84,20 @@ public class ShortLinkController {
         List<String> list = Arrays.asList(gid);
         List<ShortLinkGroupCountQueryRespDTO> dtoList = shortLinkDubboService.listGroupLinkCount(list, UserContext.getUsername());
         return Results.success(dtoList);
+    }
+
+    /**
+     * 批量创建短链接
+     */
+    @SneakyThrows
+    @PostMapping("/api/short-link/admin/v1/create/batch")
+    public void batchCreateShortLink(@RequestBody ShortLinkBatchCreateParam requestParam, HttpServletResponse response) {
+        ShortLinkBatchCreateRespDTO shortLinkBatchCreateRespDTO =
+                shortLinkDubboService.batchCreateShortLink(requestParam);
+        if (Objects.nonNull(shortLinkBatchCreateRespDTO)) {
+            List<ShortLinkBaseInfoRespDTO> baseLinkInfos = shortLinkBatchCreateRespDTO.getBaseLinkInfos();
+            EasyExcelWebUtil.write(response, "批量创建短链接-SaaS短链接系统", ShortLinkBaseInfoRespDTO.class, baseLinkInfos);
+        }
     }
 
 }
