@@ -51,7 +51,7 @@ public class ShortLinkController {
      * 修改短链接
      */
     @Operation(description = "修改短链接")
-    @PutMapping("/update")
+    @PostMapping("/update")
     public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateParam shortLinkUpdateParam){
         shortLinkUpdateParam.setUsername(UserContext.getUsername());
         shortLinkDubboService.updateShortLink(shortLinkUpdateParam);

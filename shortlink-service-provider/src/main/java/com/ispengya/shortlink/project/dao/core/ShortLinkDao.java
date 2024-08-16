@@ -62,7 +62,7 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLinkDO> {
     public void updateByConditions(ShortLinkDO oldLink) {
         lambdaUpdate()
                 .eq(ShortLinkDO::getUsername, oldLink.getUsername())
-                .eq(ShortLinkDO::getShortUri, getShortUri(oldLink.getFullShortUrl()))
+                .eq(ShortLinkDO::getShortUri, oldLink.getShortUri())
                 .eq(ShortLinkDO::getEnableStatus, YesOrNoEnum.YES.getCode())
                 .eq(ShortLinkDO::getDelFlag, YesOrNoEnum.YES.getCode())
                 .update(oldLink);

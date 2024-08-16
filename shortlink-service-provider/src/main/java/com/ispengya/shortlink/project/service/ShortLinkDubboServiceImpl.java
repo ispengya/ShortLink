@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ispengya.shortlink.common.biz.UserContext;
 import com.ispengya.shortlink.common.constant.RedisConstant;
 import static com.ispengya.shortlink.common.constant.RedisConstant.LINK_GOTO_IS_NULL_PRE_KEY;
 import static com.ispengya.shortlink.common.constant.RedisConstant.LINK_GOTO_PRE_KEY;
@@ -253,6 +254,7 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
         if (Objects.equals(oldLink.getGid(), requestParam.getGid())) {
             ShortLinkDO shortLinkDO = ShortLinkDO.builder()
                     .domain(oldLink.getDomain())
+                    .username(UserContext.getUsername())
                     .shortUri(oldLink.getShortUri())
                     .favicon(oldLink.getFavicon())
                     .createdType(oldLink.getCreatedType())
@@ -279,6 +281,7 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
                 shortLinkDao.updateByConditions(delShortLinkDO);
                 ShortLinkDO shortLinkDO = ShortLinkDO.builder()
                         .domain(officialDomain)
+                        .username(oldLink.getUsername())
                         .originUrl(requestParam.getOriginUrl())
                         .gid(requestParam.getGid())
                         .createdType(oldLink.getCreatedType())
