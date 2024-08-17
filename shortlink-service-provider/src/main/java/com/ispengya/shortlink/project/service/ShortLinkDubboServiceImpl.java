@@ -273,12 +273,12 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
             RLock rLock = readWriteLock.writeLock();
             rLock.lock();
             try {
-                ShortLinkDO delShortLinkDO = ShortLinkDO.builder()
-                        .build();
-                delShortLinkDO.setDelFlag(1);
-                delShortLinkDO.setFullShortUrl(oldLink.getFullShortUrl());
-                delShortLinkDO.setUsername(oldLink.getUsername());
-                shortLinkDao.updateByConditions(delShortLinkDO);
+//                ShortLinkDO delShortLinkDO = ShortLinkDO.builder()
+//                        .build();
+//                delShortLinkDO.setDelFlag(1);
+//                delShortLinkDO.setFullShortUrl(oldLink.getFullShortUrl());
+//                delShortLinkDO.setUsername(oldLink.getUsername());
+//                shortLinkDao.updateByConditions(delShortLinkDO);
                 ShortLinkDO shortLinkDO = ShortLinkDO.builder()
                         .domain(officialDomain)
                         .username(oldLink.getUsername())
@@ -296,7 +296,7 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
                         .fullShortUrl(oldLink.getFullShortUrl())
                         .favicon(urlService.getFavicon(requestParam.getOriginUrl()))
                         .build();
-                shortLinkDao.save(shortLinkDO);
+                shortLinkDao.updateByConditions(shortLinkDO);
                 ShortLinkGotoDO shortLinkGotoDO =
                         shortLinkGoToDao.getByFullShortUrlAndUserName(requestParam.getFullShortUrl(),
                                 oldLink.getUsername());

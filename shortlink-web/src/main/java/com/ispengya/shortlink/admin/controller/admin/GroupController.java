@@ -56,9 +56,9 @@ public class GroupController {
      * 排序分组
      */
     @Operation(description = "排序分组")
-    @PutMapping("/group/sort")
+    @PostMapping("/group/sort")
     public Result<Void> sort(@RequestBody List<GroupSortParam> reqDTOList){
-//        groupService.sort(reqDTOList);
+        groupDubboService.sort(reqDTOList);
         return Results.success();
     }
 

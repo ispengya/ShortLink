@@ -11,11 +11,14 @@ import com.ispengya.shortlink.common.biz.UserContext;
 import com.ispengya.shortlink.common.converter.BeanConverter;
 import com.ispengya.shortlink.common.enums.YesOrNoEnum;
 import com.ispengya.shortlink.common.util.AssertUtil;
+import com.ispengya.shortlink.project.dao.core.ShortLinkDao;
+import com.ispengya.shortlink.project.dto.response.ShortLinkGroupCountQueryRespDTO;
 import lombok.RequiredArgsConstructor;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -30,6 +33,7 @@ public class GroupDubboServiceImpl implements GroupDubboService {
     public static final int GID_LENGTH = 6;
     public static final int SORT_ORDER = 0;
     private final GroupDao groupDao;
+    private final ShortLinkDao shortLinkDao;
 
 
     @Override
@@ -53,9 +57,19 @@ public class GroupDubboServiceImpl implements GroupDubboService {
     public List<GroupListRespDTO> searchGroupList() {
         String username = UserContext.getUsername();
         List<Group> groupList = groupDao.listGroupByUserName(username);
-        return groupList.stream()
+        List<String> groupIds = groupList.stream().map(Group::getGid).collect(Collectors.toList());
+        List<ShortLinkGroupCountQueryRespDTO> groupLinkCount = shortLinkDao.getGroupLinkCount(groupIds, username);
+        Map<String, Integer> gidCount =
+                groupLinkCount.stream().collect(Collectors.toMap(ShortLinkGroupCountQueryRespDTO::getGid,
+                        ShortLinkGroupCountQueryRespDTO::getShortLinkCount));
+        List<GroupListRespDTO> collect = groupList.stream()
                 //TODO 查询短链接数目
-                .map(BeanConverter.CONVERTER::converterGroup1).collect(Collectors.toList());
+                .map(group -> {
+                    GroupListRespDTO groupListRespDTO = BeanConverter.CONVERTER.converterGroup1(group);
+                    groupListRespDTO.setShortLinkCount(gidCount.get(group.getGid()));
+                    return groupListRespDTO;
+                }).collect(Collectors.toList());
+        return collect;
     }
 
     @Override
