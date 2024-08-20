@@ -28,13 +28,14 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLinkDO> {
     private final ShortLinkMapper shortLinkMapper;
 
     public IPage<ShortLinkDO> pageLinkList(ShortLinkPageParam shortLinkPageParam) {
-        IPage<ShortLinkDO> page = new Page<>(shortLinkPageParam.getCurrent(), shortLinkPageParam.getSize());
-        LambdaQueryWrapper<ShortLinkDO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(ShortLinkDO::getGid, shortLinkPageParam.getGid());
-        queryWrapper.eq(ShortLinkDO::getUsername, shortLinkPageParam.getUsername());
-        queryWrapper.eq(ShortLinkDO::getEnableStatus, YesOrNoEnum.YES.getCode());
-        queryWrapper.eq(ShortLinkDO::getDelFlag, YesOrNoEnum.YES.getCode());
-        return baseMapper.selectPage(page, queryWrapper);
+//        IPage<ShortLinkDO> page = new Page<>(shortLinkPageParam.getCurrent(), shortLinkPageParam.getSize());
+//        LambdaQueryWrapper<ShortLinkDO> queryWrapper = new LambdaQueryWrapper<>();
+//        queryWrapper.eq(ShortLinkDO::getGid, shortLinkPageParam.getGid());
+//        queryWrapper.eq(ShortLinkDO::getUsername, shortLinkPageParam.getUsername());
+//        queryWrapper.eq(ShortLinkDO::getEnableStatus, YesOrNoEnum.YES.getCode());
+//        queryWrapper.eq(ShortLinkDO::getDelFlag, YesOrNoEnum.YES.getCode());
+//        return baseMapper.selectPage(page, queryWrapper);
+        return shortLinkMapper.pageLink(shortLinkPageParam);
     }
 
     public List<ShortLinkGroupCountQueryRespDTO> getGroupLinkCount(List<String> requestParam, String username) {

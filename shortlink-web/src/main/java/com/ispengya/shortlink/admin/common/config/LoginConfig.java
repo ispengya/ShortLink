@@ -24,7 +24,8 @@ public class LoginConfig implements WebMvcConfigurer {
                 "/api/short-link/admin/v1/user",
                 "/page/notfound",
                 "/{short-uri}",
-                "/test"
+                "/test",
+                "/api/short-link/admin/v1/user/has-username"
         );
         // 无需拦截的接口集合
         List<String> ignorePath = new ArrayList<>();
