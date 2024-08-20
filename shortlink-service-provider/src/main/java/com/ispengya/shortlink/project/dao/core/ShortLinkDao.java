@@ -35,7 +35,8 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLinkDO> {
 //        queryWrapper.eq(ShortLinkDO::getEnableStatus, YesOrNoEnum.YES.getCode());
 //        queryWrapper.eq(ShortLinkDO::getDelFlag, YesOrNoEnum.YES.getCode());
 //        return baseMapper.selectPage(page, queryWrapper);
-        return shortLinkMapper.pageLink(shortLinkPageParam);
+        IPage<ShortLinkDO> page = new Page<>(shortLinkPageParam.getCurrent(), shortLinkPageParam.getSize());
+        return shortLinkMapper.pageLink(page, shortLinkPageParam);
     }
 
     public List<ShortLinkGroupCountQueryRespDTO> getGroupLinkCount(List<String> requestParam, String username) {
