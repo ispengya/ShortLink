@@ -13,6 +13,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
  * 短链接应用
@@ -37,5 +38,13 @@ public class ShortLinkApplication {
     @SneakyThrows
     public void restoreUrl(@PathVariable("short-uri") String shortUri, ServletRequest request, ServletResponse response) {
         shortLinkDubboService.jumpUrlV1(shortUri, request, response);
+    }
+
+    /**
+     * 短链接不存在跳转页面
+     */
+    @RequestMapping("/page/notfound")
+    public String notfound() {
+        return "notfound";
     }
 }

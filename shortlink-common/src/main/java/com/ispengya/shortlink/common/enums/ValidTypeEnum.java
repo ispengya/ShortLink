@@ -8,8 +8,8 @@ import lombok.Getter;
  */
 @Getter
 public enum ValidTypeEnum {
-    FOREVER(1, "永久"),
-    CUSTOM(0, "自定义");
+    FOREVER(0, "永久"),
+    CUSTOM(1, "自定义");
 
 
     private Integer type;

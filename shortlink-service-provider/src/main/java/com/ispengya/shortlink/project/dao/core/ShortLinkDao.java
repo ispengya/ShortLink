@@ -115,4 +115,11 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLinkDO> {
         String shortUri = getShortUri(fullShortUrl);
         shortLinkMapper.incrementStats(username,shortUri,totalPv,totalUv,totalUip);
     }
+
+    public void delete(ShortLinkDO oldLink) {
+        LambdaQueryWrapper<ShortLinkDO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ShortLinkDO::getUsername, oldLink.getUsername());
+        queryWrapper.eq(ShortLinkDO::getShortUri, oldLink.getShortUri());
+        shortLinkMapper.delete(queryWrapper);
+    }
 }

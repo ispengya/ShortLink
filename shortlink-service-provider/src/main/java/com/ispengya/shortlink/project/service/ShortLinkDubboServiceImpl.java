@@ -49,10 +49,12 @@ import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.*;
@@ -248,27 +250,20 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
     }
 
     @Override
+    @Transactional
     public void updateShortLink(ShortLinkUpdateParam requestParam) {
         //查询更改的短链接
         ShortLinkDO oldLink = shortLinkDao.getOneByConditions(requestParam.getUsername(), requestParam.getFullShortUrl());
         AssertUtil.notNull(oldLink, "短链接不存在");
         if (Objects.equals(oldLink.getGid(), requestParam.getGid())) {
-            ShortLinkDO shortLinkDO = ShortLinkDO.builder()
-                    .domain(oldLink.getDomain())
-                    .username(UserContext.getUsername())
-                    .shortUri(oldLink.getShortUri())
-                    .favicon(oldLink.getFavicon())
-                    .createdType(oldLink.getCreatedType())
-                    .gid(requestParam.getGid())
-                    .originUrl(requestParam.getOriginUrl())
-                    .describe(requestParam.getDescribe())
-                    .validDateType(requestParam.getValidDateType())
-                    .validDate(requestParam.getValidDate())
-                    .build();
-            if (requestParam.getValidDateType() == 0){
-                shortLinkDO.setValidDate(null);
-            }
-            shortLinkDao.updateByConditions(shortLinkDO);
+            ShortLinkDO shortLinkDO = new ShortLinkDO();
+            BeanUtils.copyProperties(oldLink, shortLinkDO);
+            shortLinkDO.setOriginUrl(requestParam.getOriginUrl());
+            shortLinkDO.setDescribe(requestParam.getDescribe());
+            shortLinkDO.setValidDateType(requestParam.getValidDateType());
+            shortLinkDO.setValidDate(requestParam.getValidDate());
+            shortLinkDao.save(shortLinkDO);
+            shortLinkDao.delete(oldLink);
         } else {
             // 为什么监控表要加上Gid？不加的话是否就不存在读写锁？详情查看：https://nageoffer.com/shortlink/question
             RReadWriteLock
@@ -300,9 +295,6 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
                         .fullShortUrl(oldLink.getFullShortUrl())
                         .favicon(urlService.getFavicon(requestParam.getOriginUrl()))
                         .build();
-                if (requestParam.getValidDateType() == 0){
-                    shortLinkDO.setValidDate(null);
-                }
                 shortLinkDao.updateByConditions(shortLinkDO);
                 ShortLinkGotoDO shortLinkGotoDO =
                         shortLinkGoToDao.getByFullShortUrlAndUserName(requestParam.getFullShortUrl(),
