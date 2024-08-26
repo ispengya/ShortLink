@@ -95,8 +95,8 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
                 originLink = stringRedisTemplate.opsForValue().get(LINK_GOTO_PRE_KEY + fullShortUrl);
                 if (StrUtil.isBlank(originLink)) {
                     //获取路由表
-                    String gotoIsNullShortLink = stringRedisTemplate.opsForValue().get(String.format(LINK_GOTO_IS_NULL_PRE_KEY,
-                            fullShortUrl));
+                    String gotoIsNullShortLink = stringRedisTemplate.opsForValue().get(LINK_GOTO_IS_NULL_PRE_KEY+
+                            fullShortUrl);
                     if (StrUtil.isNotBlank(gotoIsNullShortLink)) {
                         ((HttpServletResponse) response).sendRedirect("/page/notfound");
                         return;
