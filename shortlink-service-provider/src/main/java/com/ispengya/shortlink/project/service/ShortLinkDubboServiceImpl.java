@@ -10,9 +10,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ispengya.shortlink.common.biz.UserContext;
 import com.ispengya.shortlink.common.constant.RedisConstant;
+
 import static com.ispengya.shortlink.common.constant.RedisConstant.LINK_GOTO_IS_NULL_PRE_KEY;
 import static com.ispengya.shortlink.common.constant.RedisConstant.LINK_GOTO_PRE_KEY;
 import static com.ispengya.shortlink.common.constant.RedisConstant.LOCK_GET_ORIGIN_LINK_PRE_KEY;
+
 import com.ispengya.shortlink.common.constant.ShortLinkConstant;
 import com.ispengya.shortlink.common.converter.BeanConverter;
 import com.ispengya.shortlink.common.converter.ShortLinkConverter;
@@ -93,20 +95,20 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
                 originLink = stringRedisTemplate.opsForValue().get(LINK_GOTO_PRE_KEY + fullShortUrl);
                 if (StrUtil.isBlank(originLink)) {
                     //获取路由表
-                    ShortLinkGotoDO shortLinkGotoDO = shortLinkGoToDao.getByFullShortUrl(fullShortUrl);
-                    if (shortLinkGotoDO == null) {
-                        stringRedisTemplate.opsForValue().set(LINK_GOTO_IS_NULL_PRE_KEY + fullShortUrl, "null");
-                        ((HttpServletResponse) response).sendRedirect("/page/notfound");
-                        return;
-                    }
                     String gotoIsNullShortLink = stringRedisTemplate.opsForValue().get(String.format(LINK_GOTO_IS_NULL_PRE_KEY,
                             fullShortUrl));
                     if (StrUtil.isNotBlank(gotoIsNullShortLink)) {
                         ((HttpServletResponse) response).sendRedirect("/page/notfound");
                         return;
                     }
+                    ShortLinkGotoDO shortLinkGotoDO = shortLinkGoToDao.getByFullShortUrl(fullShortUrl);
+                    if (shortLinkGotoDO == null) {
+                        stringRedisTemplate.opsForValue().set(LINK_GOTO_IS_NULL_PRE_KEY + fullShortUrl, "null");
+                        ((HttpServletResponse) response).sendRedirect("/page/notfound");
+                        return;
+                    }
                     ShortLinkDO shortLinkDO = shortLinkDao.getOneByConditions(shortLinkGotoDO.getUsername(), shortLinkGotoDO.getFullShortUrl());
-                    if (shortLinkDO == null || (shortLinkDO.getValidDate()!=null && shortLinkDO.getValidDateType().equals(ValidTypeEnum.CUSTOM.getType()) && shortLinkDO.getValidDate().before(new Date()))) {
+                    if (shortLinkDO == null || (shortLinkDO.getValidDate() != null && shortLinkDO.getValidDateType().equals(ValidTypeEnum.CUSTOM.getType()) && shortLinkDO.getValidDate().before(new Date()))) {
                         stringRedisTemplate.opsForValue().set(LINK_GOTO_IS_NULL_PRE_KEY + fullShortUrl, "null", 30, TimeUnit.MINUTES);
                         ((HttpServletResponse) response).sendRedirect("/page/notfound");
                         return;
@@ -119,7 +121,6 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
                     } else {
                         //在缓存过期默认一个月
                         stringRedisTemplate.opsForValue().set(LINK_GOTO_PRE_KEY + fullShortUrl, shortLinkDO.getOriginUrl(), ShortLinkConstant.DEFAULT_CACHE_VALID_TIME, TimeUnit.SECONDS);
-                        ((HttpServletResponse) response).sendRedirect(shortLinkDO.getOriginUrl());
                     }
                     originLink = shortLinkDO.getOriginUrl();
                 }
@@ -130,7 +131,7 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
         //进行重定向
         if (StrUtil.isNotBlank(originLink)) {
             //异步统计
-            linkStatsProducer.sendMsg(fullShortUrl,request,response);
+            linkStatsProducer.sendMsg(fullShortUrl, request, response);
             ((HttpServletResponse) response).sendRedirect(originLink);
         } else {
             ((HttpServletResponse) response).sendRedirect("/page/notfound");
@@ -264,6 +265,9 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
                     .validDateType(requestParam.getValidDateType())
                     .validDate(requestParam.getValidDate())
                     .build();
+            if (requestParam.getValidDateType() == 0){
+                shortLinkDO.setValidDate(null);
+            }
             shortLinkDao.updateByConditions(shortLinkDO);
         } else {
             // 为什么监控表要加上Gid？不加的话是否就不存在读写锁？详情查看：https://nageoffer.com/shortlink/question
@@ -296,6 +300,9 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
                         .fullShortUrl(oldLink.getFullShortUrl())
                         .favicon(urlService.getFavicon(requestParam.getOriginUrl()))
                         .build();
+                if (requestParam.getValidDateType() == 0){
+                    shortLinkDO.setValidDate(null);
+                }
                 shortLinkDao.updateByConditions(shortLinkDO);
                 ShortLinkGotoDO shortLinkGotoDO =
                         shortLinkGoToDao.getByFullShortUrlAndUserName(requestParam.getFullShortUrl(),
@@ -311,11 +318,11 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
         if (!Objects.equals(oldLink.getValidDateType(), requestParam.getValidDateType())
                 || !Objects.equals(oldLink.getValidDate(), requestParam.getValidDate())
                 || !Objects.equals(oldLink.getOriginUrl(), requestParam.getOriginUrl())) {
-            stringRedisTemplate.delete(String.format(LINK_GOTO_PRE_KEY, requestParam.getFullShortUrl()));
+            stringRedisTemplate.delete(LINK_GOTO_PRE_KEY + requestParam.getFullShortUrl());
             Date currentDate = new Date();
             if (oldLink.getValidDate() != null && oldLink.getValidDate().before(currentDate)) {
                 if (Objects.equals(requestParam.getValidDateType(), ValidTypeEnum.FOREVER.getType()) || requestParam.getValidDate().after(currentDate)) {
-                    stringRedisTemplate.delete(String.format(LINK_GOTO_IS_NULL_PRE_KEY, requestParam.getFullShortUrl()));
+                    stringRedisTemplate.delete(LINK_GOTO_IS_NULL_PRE_KEY + requestParam.getFullShortUrl());
                 }
             }
         }
@@ -338,7 +345,7 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
                         }
                         return shortLinkRespDTO;
                     }).toList();
-            PageDTO<ShortLinkRespDTO> pageDTO =new PageDTO<>();
+            PageDTO<ShortLinkRespDTO> pageDTO = new PageDTO<>();
             pageDTO.setRecords(shortLinkRespDTOS);
             pageDTO.setPages(linkPage.getPages());
             pageDTO.setSize(linkPage.getSize());
