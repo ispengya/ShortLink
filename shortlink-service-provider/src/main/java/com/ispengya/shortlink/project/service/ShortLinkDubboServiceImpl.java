@@ -280,6 +280,7 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
             ShortLinkGotoDO linkGotoDO = ShortLinkGotoDO.builder()
                     .fullShortUrl(fullShortUrl)
                     .gid(requestParam.getGid())
+                    .username(requestParam.getUsername())
                     .build();
             try {
                 shortLinkDao.save(shortLinkDO);
