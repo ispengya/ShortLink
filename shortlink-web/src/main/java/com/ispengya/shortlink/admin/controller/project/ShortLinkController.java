@@ -55,6 +55,17 @@ public class ShortLinkController {
     }
 
     /**
+     * 新增短链接
+     */
+    @Operation(description = "新增短链接")
+    @PostMapping("/v1/create")
+    public Result<ShortLinkCreateRespDTO> createLinkByLock(@Valid @RequestBody ShortLinkCreateParam shortLinkCreateParam) {
+        shortLinkCreateParam.setUsername(UserContext.getUsername());
+        ShortLinkCreateRespDTO shortLinkCreateRespDTO = shortLinkDubboService.createShortLinkByLock(shortLinkCreateParam);
+        return Results.success(shortLinkCreateRespDTO);
+    }
+
+    /**
      * 修改短链接
      */
     @Operation(description = "修改短链接")

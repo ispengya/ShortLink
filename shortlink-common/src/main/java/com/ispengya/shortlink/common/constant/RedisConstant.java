@@ -38,5 +38,10 @@ public class RedisConstant {
      */
     public static final String LINK_GOTO_IS_NULL_PRE_KEY="short-link:project:goto-is-null:";
 
+    /**
+     * 创建短链接锁标识
+     */
+    public static final String SHORT_LINK_CREATE_LOCK_KEY = "short-link:lock:create";
+
 
 }

@@ -39,12 +39,4 @@ public class ShortLinkApplication {
     public void restoreUrl(@PathVariable("short-uri") String shortUri, ServletRequest request, ServletResponse response) {
         shortLinkDubboService.jumpUrlV1(shortUri, request, response);
     }
-
-    /**
-     * 短链接不存在跳转页面
-     */
-    @RequestMapping("/page/notfound")
-    public String notfound() {
-        return "notfound";
-    }
 }

@@ -47,6 +47,14 @@ public interface ShortLinkDubboService {
     ShortLinkCreateRespDTO createLink(ShortLinkCreateParam shortLinkCreateParam);
 
     /**
+     * 根据分布式锁创建短链接
+     *
+     * @param requestParam 创建短链接请求参数
+     * @return 短链接创建信息
+     */
+    ShortLinkCreateRespDTO createShortLinkByLock(ShortLinkCreateParam requestParam);
+
+    /**
      * 修改短链接
      * @param shortLinkUpdateParam
      */

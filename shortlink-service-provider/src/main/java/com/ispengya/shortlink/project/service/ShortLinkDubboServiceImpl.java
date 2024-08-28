@@ -2,6 +2,7 @@ package com.ispengya.shortlink.project.service;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.lang.UUID;
 import cn.hutool.core.text.StrBuilder;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -10,10 +11,6 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ispengya.shortlink.common.biz.UserContext;
 import com.ispengya.shortlink.common.constant.RedisConstant;
-
-import static com.ispengya.shortlink.common.constant.RedisConstant.LINK_GOTO_IS_NULL_PRE_KEY;
-import static com.ispengya.shortlink.common.constant.RedisConstant.LINK_GOTO_PRE_KEY;
-import static com.ispengya.shortlink.common.constant.RedisConstant.LOCK_GET_ORIGIN_LINK_PRE_KEY;
 
 import com.ispengya.shortlink.common.constant.ShortLinkConstant;
 import com.ispengya.shortlink.common.converter.BeanConverter;
@@ -60,6 +57,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static com.ispengya.shortlink.common.constant.RedisConstant.*;
 
 /**
  * @author ispengya
@@ -250,6 +249,60 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
     }
 
     @Override
+    public ShortLinkCreateRespDTO createShortLinkByLock(ShortLinkCreateParam requestParam) {
+        String fullShortUrl;
+        // 为什么说布隆过滤器性能远胜于分布式锁？详情查看：https://nageoffer.com/shortlink/question
+        RLock lock = redissonClient.getLock(SHORT_LINK_CREATE_LOCK_KEY);
+        lock.lock();
+        try {
+            String shortLinkSuffix = generateSuffixByLock(requestParam);
+            fullShortUrl = StrBuilder.create(requestParam.getDomain())
+                    .append("/")
+                    .append(shortLinkSuffix)
+                    .toString();
+            ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+                    .domain(requestParam.getDomain())
+                    .originUrl(requestParam.getOriginUrl())
+                    .gid(requestParam.getGid())
+                    .username(requestParam.getUsername())
+                    .createdType(requestParam.getCreatedType())
+                    .validDateType(requestParam.getValidDateType())
+                    .validDate(requestParam.getValidDate())
+                    .describe(requestParam.getDescribe())
+                    .shortUri(shortLinkSuffix)
+                    .enableStatus(0)
+                    .totalPv(0)
+                    .totalUv(0)
+                    .totalUip(0)
+                    .fullShortUrl(fullShortUrl)
+                    .favicon(urlService.getFavicon(requestParam.getOriginUrl()))
+                    .build();
+            ShortLinkGotoDO linkGotoDO = ShortLinkGotoDO.builder()
+                    .fullShortUrl(fullShortUrl)
+                    .gid(requestParam.getGid())
+                    .build();
+            try {
+                shortLinkDao.save(shortLinkDO);
+                shortLinkGoToDao.save(linkGotoDO);
+            } catch (DuplicateKeyException ex) {
+                throw new ServiceException(String.format("短链接：%s 生成重复", fullShortUrl));
+            }
+            stringRedisTemplate.opsForValue().set(
+                    LINK_GOTO_PRE_KEY + fullShortUrl,
+                    requestParam.getOriginUrl(),
+                    LinkUtil.getLinkCacheValidTime(requestParam.getValidDate()), TimeUnit.MILLISECONDS
+            );
+        } finally {
+            lock.unlock();
+        }
+        return ShortLinkCreateRespDTO.builder()
+                .fullShortUrl("http://" + fullShortUrl)
+                .originUrl(requestParam.getOriginUrl())
+                .gid(requestParam.getGid())
+                .build();
+    }
+
+    @Override
     @Transactional
     public void updateShortLink(ShortLinkUpdateParam requestParam) {
         //查询更改的短链接
@@ -393,6 +446,26 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
             originUrl += System.currentTimeMillis();
             shorUri = HashUtil.hashToBase62(originUrl);
             if (!shortUriCreateCachePenetrationBloomFilter.contains(dto.getDomain() + "/" + shorUri)) {
+                break;
+            }
+            customGenerateCount++;
+        }
+        return shorUri;
+    }
+
+    private String generateSuffixByLock(ShortLinkCreateParam requestParam) {
+        int customGenerateCount = 0;
+        String shorUri;
+        while (true) {
+            if (customGenerateCount > 10) {
+                throw new ServiceException("短链接频繁生成，请稍后再试");
+            }
+            String originUrl = requestParam.getOriginUrl();
+            originUrl += UUID.randomUUID().toString();
+            // 短链接哈希算法生成冲突问题如何解决？详情查看：https://nageoffer.com/shortlink/question
+            shorUri = HashUtil.hashToBase62(originUrl);
+            ShortLinkDO shortLinkDO = shortLinkDao.getOneByConditions(requestParam.getUsername(), shorUri);
+            if (shortLinkDO == null) {
                 break;
             }
             customGenerateCount++;
