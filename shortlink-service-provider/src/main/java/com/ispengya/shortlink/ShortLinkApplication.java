@@ -1,5 +1,6 @@
 package com.ispengya.shortlink;
 
+import com.ispengya.shortlink.project.dto.request.ShortLinkCreateParam;
 import com.ispengya.shortlink.project.service.ShortLinkDubboService;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
@@ -11,9 +12,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 短链接应用
@@ -38,5 +37,19 @@ public class ShortLinkApplication {
     @SneakyThrows
     public void restoreUrl(@PathVariable("short-uri") String shortUri, ServletRequest request, ServletResponse response) {
         shortLinkDubboService.jumpUrlV1(shortUri, request, response);
+    }
+
+    @PostMapping("/ispengya/create")
+    @ResponseBody
+    public String createV1(@RequestBody ShortLinkCreateParam param) {
+        shortLinkDubboService.createLink(param);
+        return "ok";
+    }
+
+    @PostMapping("/ispengya/createByLock")
+    @ResponseBody
+    public String createV2(@RequestBody ShortLinkCreateParam param) {
+        shortLinkDubboService.createShortLinkByLock(param);
+        return "ok";
     }
 }

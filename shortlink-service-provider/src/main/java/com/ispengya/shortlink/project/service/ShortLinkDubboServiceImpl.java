@@ -222,7 +222,7 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
                 .append(shortUri)
                 .toString();
         //获取favicon
-        String favicon = urlService.getFavicon(shortLinkCreateParam.getOriginUrl());
+        String favicon = "https://link.zaizaige.top/favicon.ico";
         //构建实体
         ShortLinkDO shortLinkDO = ShortLinkConverter.buildShortLink(shortUri, fullShortUrl, shortLinkCreateParam, shortLinkCreateParam.getUsername(), favicon);
         //构建路由表实体
@@ -444,7 +444,7 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
             }
             //加上时间戳,防止同样的短链接在不同时间无法申请
             String originUrl = dto.getOriginUrl();
-            originUrl += System.currentTimeMillis();
+            originUrl += UUID.randomUUID().toString();
             shorUri = HashUtil.hashToBase62(originUrl);
             if (!shortUriCreateCachePenetrationBloomFilter.contains(dto.getDomain() + "/" + shorUri)) {
                 break;
