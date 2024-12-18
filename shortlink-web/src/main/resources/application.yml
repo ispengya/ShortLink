@@ -12,19 +12,6 @@ dubbo:
     check: false
     timeout: 5000
 
-knife4j:
-  # 开启增强配置
-  enable: true
-  setting:
-    # 是否启用Host
-    enable-host: false
-    enable-host-text: www
-    enable-footer: false
-    enable-footer-custom: true
-    footer-custom-content: 豫ICP备2024074573号
-    enable-home-custom: true
-    home-custom-path: classpath:markdown/home.md
-    enable-search: false
 spring:
   application:
     name: short-link-web

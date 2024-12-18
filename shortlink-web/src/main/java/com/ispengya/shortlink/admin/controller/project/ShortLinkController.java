@@ -9,16 +9,8 @@ import com.ispengya.shortlink.project.dto.request.ShortLinkBatchCreateParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkCreateParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkPageParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkUpdateParam;
-import com.ispengya.shortlink.project.dto.response.ShortLinkBaseInfoRespDTO;
-import com.ispengya.shortlink.project.dto.response.ShortLinkBatchCreateRespDTO;
-import com.ispengya.shortlink.project.dto.response.ShortLinkCreateRespDTO;
-import com.ispengya.shortlink.project.dto.response.ShortLinkGroupCountQueryRespDTO;
-import com.ispengya.shortlink.project.dto.response.ShortLinkRespDTO;
+import com.ispengya.shortlink.project.dto.response.*;
 import com.ispengya.shortlink.project.service.ShortLinkDubboService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.SneakyThrows;
@@ -33,7 +25,6 @@ import java.util.Objects;
  * @author ispengya
  * @date 2023/11/25 14:21
  */
-@Tag(name = "链易短-链接核心接口")
 @RestController
 @RequestMapping("/api/short-link/admin/v1")
 public class ShortLinkController {
@@ -46,7 +37,6 @@ public class ShortLinkController {
     /**
      * 新增短链接
      */
-    @Operation(description = "新增短链接")
     @PostMapping("/create")
     public Result<ShortLinkCreateRespDTO> createLink(@Valid @RequestBody ShortLinkCreateParam shortLinkCreateParam) {
         shortLinkCreateParam.setUsername(UserContext.getUsername());
@@ -57,7 +47,6 @@ public class ShortLinkController {
     /**
      * 新增短链接
      */
-    @Operation(description = "新增短链接")
     @PostMapping("/v1/create")
     public Result<ShortLinkCreateRespDTO> createLinkByLock(@Valid @RequestBody ShortLinkCreateParam shortLinkCreateParam) {
         shortLinkCreateParam.setUsername(UserContext.getUsername());
@@ -68,7 +57,6 @@ public class ShortLinkController {
     /**
      * 修改短链接
      */
-    @Operation(description = "修改短链接")
     @PostMapping("/update")
     public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateParam shortLinkUpdateParam){
         shortLinkUpdateParam.setUsername(UserContext.getUsername());
@@ -79,7 +67,6 @@ public class ShortLinkController {
     /**
      * 分页查询短链接
      */
-    @Operation(description = "分页查询短链接")
     @GetMapping("/page")
     public Result<PageDTO<ShortLinkRespDTO>> pageLink(ShortLinkPageParam shortLinkPageParam) {
         shortLinkPageParam.setUsername(UserContext.getUsername());
@@ -89,7 +76,6 @@ public class ShortLinkController {
     /**
      * 查寻分组下的短链接数量
      */
-    @Operation(description = "查寻分组下的短链接数量")
     @GetMapping("/api/short-link/project/page/linkCount")
     public Result<List<ShortLinkGroupCountQueryRespDTO>> listGroupLinkCount(@RequestParam("gid") String[] gid) {
         List<String> list = Arrays.asList(gid);
