@@ -1,4 +1,4 @@
-package com.ispengya.shortlink.project.dao.core;
+package com.ispengya.shortlink.project.dao;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;

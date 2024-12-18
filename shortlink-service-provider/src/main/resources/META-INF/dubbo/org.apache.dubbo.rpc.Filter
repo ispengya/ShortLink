@@ -1,1 +1,1 @@
-dubboProviderFilter=com.ispengya.shortlink.common.dubbo.DubboProviderFilter
+dubboProviderFilter=com.ispengya.shortlink.common.config.UserContextDubboFilter

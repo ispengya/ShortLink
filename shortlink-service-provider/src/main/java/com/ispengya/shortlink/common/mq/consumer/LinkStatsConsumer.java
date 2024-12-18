@@ -1,4 +1,4 @@
-package com.ispengya.shortlink.project.mq.consumer;
+package com.ispengya.shortlink.common.mq.consumer;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.Week;
@@ -11,8 +11,8 @@ import static com.ispengya.shortlink.common.constant.RedisConstant.LOCK_GID_UPDA
 import static com.ispengya.shortlink.common.constant.ShortLinkConstant.AMAP_REMOTE_URL;
 import com.ispengya.shortlink.common.exception.ServiceException;
 import com.ispengya.shortlink.common.util.JsonUtils;
-import com.ispengya.shortlink.project.dao.core.ShortLinkDao;
-import com.ispengya.shortlink.project.dao.core.ShortLinkGoToDao;
+import com.ispengya.shortlink.project.dao.ShortLinkDao;
+import com.ispengya.shortlink.project.dao.ShortLinkGoToDao;
 import com.ispengya.shortlink.project.domain.LinkAccessLogsDO;
 import com.ispengya.shortlink.project.domain.LinkAccessStatsDO;
 import com.ispengya.shortlink.project.domain.LinkBrowserStatsDO;
@@ -31,7 +31,7 @@ import com.ispengya.shortlink.project.mapper.LinkLocaleStatsMapper;
 import com.ispengya.shortlink.project.mapper.LinkNetworkStatsMapper;
 import com.ispengya.shortlink.project.mapper.LinkOsStatsMapper;
 import com.ispengya.shortlink.project.mapper.LinkStatsTodayMapper;
-import com.ispengya.shortlink.project.mq.idempotent.MessageQueueIdempotentHandler;
+import com.ispengya.shortlink.common.mq.idempotent.MessageQueueIdempotentHandler;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.MessageModel;

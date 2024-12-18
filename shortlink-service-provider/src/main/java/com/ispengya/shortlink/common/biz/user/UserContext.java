@@ -1,4 +1,4 @@
-package com.ispengya.shortlink.common.biz;
+package com.ispengya.shortlink.common.biz.user;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
 

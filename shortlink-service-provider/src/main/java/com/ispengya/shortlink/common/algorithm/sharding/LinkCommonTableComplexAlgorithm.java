@@ -1,4 +1,4 @@
-package com.ispengya.shortlink.common.sharding;
+package com.ispengya.shortlink.common.algorithm.sharding;
 
 import cn.hutool.core.collection.CollUtil;
 import com.google.common.base.Preconditions;

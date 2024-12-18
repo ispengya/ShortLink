@@ -1,4 +1,4 @@
-package com.ispengya.shortlink.common.sharding;
+package com.ispengya.shortlink.common.algorithm.sharding;
 
 import org.apache.shardingsphere.infra.util.exception.ShardingSpherePreconditions;
 import org.apache.shardingsphere.sharding.algorithm.sharding.ShardingAutoTableAlgorithmUtil;
@@ -13,7 +13,7 @@ import java.util.Properties;
 /**
  * Custom db hash sharding algorithm.
  */
-public final class CustomProjectDbHashModShardingAlgorithm implements StandardShardingAlgorithm<Comparable<?>> {
+public final class CustomAdminDbHashModShardingAlgorithm implements StandardShardingAlgorithm<Comparable<?>> {
 
     private static final String SHARDING_COUNT_KEY = "sharding-count";
     private static final String TABLE_SHARDING_COUNT_KEY = "table-sharding-count";
@@ -29,9 +29,9 @@ public final class CustomProjectDbHashModShardingAlgorithm implements StandardSh
 
     @Override
     public String doSharding(final Collection<String> availableTargetNames, final PreciseShardingValue<Comparable<?>> shardingValue) {
-//        String suffix = String.valueOf(hashShardingValue(shardingValue.getValue()) % shardingCount / tableShardingCount);
-        //TODO
-        String suffix = String.valueOf(0);
+        String suffix = String.valueOf(hashShardingValue(shardingValue.getValue()) % shardingCount / tableShardingCount);
+        //TODO 目前先加上2
+        suffix = String.valueOf(Integer.parseInt(suffix)+2);
         return ShardingAutoTableAlgorithmUtil.findMatchedTargetName(availableTargetNames, suffix, shardingValue.getDataNodeInfo()).orElse(null);
     }
 

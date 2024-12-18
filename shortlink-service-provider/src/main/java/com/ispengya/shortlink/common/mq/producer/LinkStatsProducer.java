@@ -1,4 +1,4 @@
-package com.ispengya.shortlink.project.mq.producer;
+package com.ispengya.shortlink.common.mq.producer;
 
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.ArrayUtil;

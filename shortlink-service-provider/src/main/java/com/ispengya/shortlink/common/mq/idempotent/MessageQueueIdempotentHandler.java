@@ -1,4 +1,4 @@
-package com.ispengya.shortlink.project.mq.idempotent;
+package com.ispengya.shortlink.common.mq.idempotent;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;

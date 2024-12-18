@@ -1,4 +1,4 @@
-package com.ispengya.shortlink.admin.common.exception;
+package com.ispengya.shortlink.admin.common.config;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
