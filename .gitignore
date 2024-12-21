@@ -12,13 +12,14 @@ target/
 .springBeans
 .sts4-cache
 
+**/application-prod.properties
+
 ### IntelliJ IDEA ###
 .idea
 !/.idea/icon.png
 *.iws
 *.iml
 *.ipr
-
 *.yml
 *.yaml
 

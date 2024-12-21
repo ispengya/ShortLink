@@ -13,6 +13,7 @@ import java.io.Serializable;
 @TableName("t_link_goto")
 @NoArgsConstructor
 @AllArgsConstructor
+@Deprecated
 public class ShortLinkGotoDO implements Serializable {
 
     /**

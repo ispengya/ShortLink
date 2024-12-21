@@ -6,8 +6,9 @@ dubbo:
     name: short-link-web
   protocol:
     name: dubbo
+    port: -1
   registry:
-    address: nacos://127.0.0.1:8848?username=nacos&password=nacos
+    address: nacos://${link.nacos.ip}:${link.nacos.port}?username=${link.nacos.username}&password=${link.nacos.password}
   consumer:
     check: false
     timeout: 5000
@@ -18,13 +19,15 @@ spring:
   data:
     ##############redis#################
     redis:
-      host: 116.198.205.100
-      port: 9991
-      password: iFRQYImbNzwT6Q5P8Uoy
-      database: 2
+      host: ${link.redis.ip}
+      port: ${link.redis.port}
+      password: ${link.redis.password}
+      database: ${link.redis.database}
   mvc:
     view:
       prefix: /templates/
       suffix: .html
+  profiles:
+    active: prod
 logging:
   config: classpath:log4j2-spring.xml

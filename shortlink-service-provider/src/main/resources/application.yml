@@ -1,21 +1,21 @@
 server:
-  port: 8001
+  port: ${link.server.port}
 
 short-link:
   stats:
     locale:
-      amap-key: c5fc20eb970fc6617f328f59e48203e1
+      amap-key: ${link.locale.amapkey}
   official:
-    domain: cn.zaizaige.top
+    domain: ${link.official.domain}
 
 dubbo:
   application:
     name: shortlink-service-provider
   protocol:
     name: dubbo
-    port: 50052
+    port: -1
   registry:
-    address: nacos://8.130.42.65:8848?username=nacos&password=nacos
+    address: nacos://${link.nacos.ip}:${link.nacos.port}?username=${link.nacos.username}&password=${link.nacos.password}
   provider:
     filter: -exception
 
@@ -23,8 +23,10 @@ spring:
   application:
     name: short-link-project
   datasource:
-    driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
-    url: jdbc:shardingsphere:classpath:shardingsphere-config.yaml
+    url: jdbc:mysql://${link.mysql.ip}:${link.mysql.port}/${link.mysql.db}?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: ${link.mysql.username}
+    password: ${link.mysql.password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
   mvc:
     view:
       prefix: /templates/
@@ -32,15 +34,17 @@ spring:
   data:
     ##############redis#################
     redis:
-      host: 116.198.205.100
-      port: 9991
-      password: iFRQYImbNzwT6Q5P8Uoy
-      database: 2
+      host: ${link.redis.ip}
+      port: ${link.redis.port}
+      password: ${link.redis.password}
+      database: ${link.redis.database}
+  profiles:
+    active: prod
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml
 #==========================rocketmq===========================
 rocketmq:
-  name-server: 124.220.44.196:9876
+  name-server: ${link.rocketmq.server}
   # 默认的消息组
   producer:
     group: shortLinkGroup
