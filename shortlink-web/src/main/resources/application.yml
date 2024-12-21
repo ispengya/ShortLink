@@ -3,11 +3,11 @@ server:
 
 dubbo:
   application:
-    name: shortlink-web
+    name: short-link-web
   protocol:
     name: dubbo
   registry:
-    address: nacos://8.130.42.65:8848?username=nacos&password=nacos
+    address: nacos://127.0.0.1:8848?username=nacos&password=nacos
   consumer:
     check: false
     timeout: 5000

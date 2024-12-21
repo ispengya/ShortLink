@@ -31,13 +31,13 @@ public interface ShortLinkDubboService {
     void jumpUrlV1(String shortUri, ServletRequest request, ServletResponse response) throws IOException;
 
 
-    /**
-     * 短链接跳转 V2版本引入jdhotkey
-     * @param shortUri
-     * @param request
-     * @param response
-     */
-    void jumpUrlV2(String shortUri, ServletRequest request, ServletResponse response) throws IOException;
+//    /**
+//     * 短链接跳转 V2版本引入jdhotkey
+//     * @param shortUri
+//     * @param request
+//     * @param response
+//     */
+//    void jumpUrlV2(String shortUri, ServletRequest request, ServletResponse response) throws IOException;
 
     /**
      * 创建短链接

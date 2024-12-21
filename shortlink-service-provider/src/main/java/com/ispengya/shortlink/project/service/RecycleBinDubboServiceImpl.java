@@ -3,12 +3,12 @@ package com.ispengya.shortlink.project.service;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.ispengya.shortlink.common.constant.RedisConstant;
-import static com.ispengya.shortlink.common.constant.RedisConstant.LINK_GOTO_PRE_KEY;
 import com.ispengya.shortlink.common.constant.ShortLinkConstant;
 import com.ispengya.shortlink.common.converter.BeanConverter;
 import com.ispengya.shortlink.common.enums.ValidTypeEnum;
 import com.ispengya.shortlink.common.enums.YesOrNoEnum;
 import com.ispengya.shortlink.common.result.PageDTO;
+import com.ispengya.shortlink.common.util.RedisUtils;
 import com.ispengya.shortlink.project.dao.ShortLinkDao;
 import com.ispengya.shortlink.project.dao.ShortLinkGoToDao;
 import com.ispengya.shortlink.project.domain.ShortLinkDO;
@@ -18,7 +18,6 @@ import com.ispengya.shortlink.project.dto.request.RecycleBinRemoveParam;
 import com.ispengya.shortlink.project.dto.request.RecycleSaveParam;
 import com.ispengya.shortlink.project.dto.response.ShortLinkRespDTO;
 import com.ispengya.shortlink.project.util.LinkUtil;
-import com.ispengya.travel.frameworks.starter.cache.toolkit.RedisUtils;
 import lombok.RequiredArgsConstructor;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +27,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
+import static com.ispengya.shortlink.common.constant.RedisConstant.LINK_GOTO_PRE_KEY;
 
 /**
  * @author ispengya

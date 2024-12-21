@@ -7,13 +7,13 @@ import cn.hutool.core.text.StrBuilder;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.ispengya.shortlink.common.constant.RedisConstant;
-
 import com.ispengya.shortlink.common.constant.ShortLinkConstant;
 import com.ispengya.shortlink.common.converter.BeanConverter;
 import com.ispengya.shortlink.common.converter.ShortLinkConverter;
 import com.ispengya.shortlink.common.enums.ValidTypeEnum;
 import com.ispengya.shortlink.common.enums.YesOrNoEnum;
 import com.ispengya.shortlink.common.exception.ServiceException;
+import com.ispengya.shortlink.common.mq.producer.LinkStatsProducer;
 import com.ispengya.shortlink.common.result.PageDTO;
 import com.ispengya.shortlink.common.util.AssertUtil;
 import com.ispengya.shortlink.project.dao.ShortLinkDao;
@@ -25,16 +25,12 @@ import com.ispengya.shortlink.project.dto.request.ShortLinkCreateParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkPageParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkUpdateParam;
 import com.ispengya.shortlink.project.dto.response.*;
-import com.ispengya.shortlink.common.mq.producer.LinkStatsProducer;
 import com.ispengya.shortlink.project.util.HashUtil;
 import com.ispengya.shortlink.project.util.LinkUtil;
-import com.ispengya.travel.frameworks.starter.cache.core.multistage.MultiStageCache;
-import com.jd.platform.hotkey.client.callback.JdHotKeyStore;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -74,15 +70,14 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
     private final RedissonClient redissonClient;
     private final UrlDubboServiceImpl urlService;
     private final RocketMQTemplate rocketMQTemplate;
-    private final MultiStageCache multiStageCache;
     private final LinkStatsProducer linkStatsProducer;
 
     @Override
     public void jumpUrlV1(String shortUri, ServletRequest request, ServletResponse response) throws IOException {
         String serverName = request.getServerName();
         String fullShortUrl = serverName + "/" + shortUri;
-        String originLink = multiStageCache.getByMultiStageCacheWithoutLimit(LINK_GOTO_PRE_KEY + fullShortUrl,
-                String.class, null);
+        //TODO
+        String originLink = null;
         if (StrUtil.isEmpty(originLink)) {
             RLock lock = redissonClient.getLock(LOCK_GET_ORIGIN_LINK_PRE_KEY + fullShortUrl);
             lock.lock();
@@ -134,79 +129,6 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
         }
     }
 
-
-    @Override
-    @SneakyThrows
-    public void jumpUrlV2(String shortUri, ServletRequest request, ServletResponse response) {
-        String serverName = request.getServerName();
-        String fullShortUrl = serverName + "/" + shortUri;
-        String originLink = "";
-        //是否热key
-        Object hotKeyValue = JdHotKeyStore.getValue(LINK_GOTO_PRE_KEY + fullShortUrl);
-        if (Objects.nonNull(hotKeyValue)) {
-            //是热key并且有值
-            originLink = String.valueOf(hotKeyValue);
-        } else {
-            //不是热key，为null 。为热key但是未设置值
-            originLink = stringRedisTemplate.opsForValue().get(LINK_GOTO_PRE_KEY + fullShortUrl);
-            if (StrUtil.isNotBlank(originLink)) {
-                setHotKeyOrNull(LINK_GOTO_PRE_KEY + fullShortUrl, originLink);
-            } else {
-                //redis也没有,去数据库加载
-                //解决缓存穿透,先用布隆过滤器判断
-                boolean contains = shortUriCreateCachePenetrationBloomFilter.contains(fullShortUrl);
-                if (!contains) {
-                    ((HttpServletResponse) response).sendRedirect("/page/notfound");
-                    return;
-                }
-                //判断空值,其实大部分布隆过滤器就可以解决，但还是会存在漏判
-                String isNull = stringRedisTemplate.opsForValue().get(LINK_GOTO_IS_NULL_PRE_KEY + fullShortUrl);
-                if (StrUtil.isNotBlank(isNull)) {//说明缓存的空值,防止穿透
-                    ((HttpServletResponse) response).sendRedirect("/page/notfound");
-                    return;
-                }
-                RLock lock = redissonClient.getLock(LOCK_GET_ORIGIN_LINK_PRE_KEY + fullShortUrl);
-                lock.lock();
-                try {
-                    //双重检测
-                    originLink = stringRedisTemplate.opsForValue().get(LINK_GOTO_PRE_KEY + fullShortUrl);
-                    if (StrUtil.isNotBlank(originLink)) {
-                        setHotKeyOrNull(LINK_GOTO_PRE_KEY + fullShortUrl, originLink);
-                    } else {
-                        ShortLinkGotoDO shortLinkGotoDO = shortLinkGoToDao.getByFullShortUrl(fullShortUrl);
-                        if (shortLinkGotoDO == null) {
-                            stringRedisTemplate.opsForValue().set(LINK_GOTO_IS_NULL_PRE_KEY + fullShortUrl, "null");
-                            ((HttpServletResponse) response).sendRedirect("/page/notfound");
-                            return;
-                        }
-                        ShortLinkDO
-                                shortLinkDO = shortLinkDao.getOneByConditions(shortLinkGotoDO.getUsername(), shortLinkGotoDO.getFullShortUrl());
-                        if (shortLinkDO == null || (shortLinkDO.getValidDateType().equals(ValidTypeEnum.CUSTOM.getType()) && shortLinkDO.getValidDate().before(new Date()))) {
-                            stringRedisTemplate.opsForValue().set(LINK_GOTO_IS_NULL_PRE_KEY + fullShortUrl, "null", 30, TimeUnit.MINUTES);
-                            ((HttpServletResponse) response).sendRedirect("/page/notfound");
-                            return;
-                        }
-                        //判断有效期是否永久
-                        if (!Objects.equals(shortLinkDO.getValidDateType(), ValidTypeEnum.FOREVER.getType())) {
-                            stringRedisTemplate.opsForValue().set(LINK_GOTO_PRE_KEY + fullShortUrl, shortLinkDO.getOriginUrl(),
-                                    LinkUtil.getLinkCacheValidTime(shortLinkDO.getValidDate()), TimeUnit.MILLISECONDS
-                            );
-                            originLink = shortLinkDO.getOriginUrl();
-                        } else {
-                            originLink = shortLinkDO.getOriginUrl();
-                            //在缓存过期默认一个月
-                            stringRedisTemplate.opsForValue().set(LINK_GOTO_PRE_KEY + fullShortUrl, shortLinkDO.getOriginUrl(), ShortLinkConstant.DEFAULT_CACHE_VALID_TIME, TimeUnit.SECONDS);
-                            ((HttpServletResponse) response).sendRedirect(shortLinkDO.getOriginUrl());
-                        }
-                        setHotKeyOrNull(LINK_GOTO_PRE_KEY + fullShortUrl, originLink);
-                    }
-                } finally {
-                    lock.unlock();
-                }
-            }
-
-        }
-    }
 
     @Override
     public ShortLinkCreateRespDTO createLink(ShortLinkCreateParam shortLinkCreateParam) {
@@ -467,14 +389,6 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
             customGenerateCount++;
         }
         return shorUri;
-    }
-
-
-    private void setHotKeyOrNull(String key, Object value) {
-        boolean isHotKey = JdHotKeyStore.isHotKey(key);
-        if (isHotKey) {
-            JdHotKeyStore.smartSet(key, value);
-        }
     }
 
 
