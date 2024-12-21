@@ -11,12 +11,12 @@ import com.ispengya.shortlink.project.dto.request.ShortLinkPageParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkUpdateParam;
 import com.ispengya.shortlink.project.dto.response.*;
 import com.ispengya.shortlink.project.service.ShortLinkDubboService;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
 import lombok.SneakyThrows;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;

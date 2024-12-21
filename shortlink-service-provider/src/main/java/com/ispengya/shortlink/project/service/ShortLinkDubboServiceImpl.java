@@ -27,9 +27,6 @@ import com.ispengya.shortlink.project.dto.request.ShortLinkUpdateParam;
 import com.ispengya.shortlink.project.dto.response.*;
 import com.ispengya.shortlink.project.util.HashUtil;
 import com.ispengya.shortlink.project.util.LinkUtil;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboService;
@@ -45,9 +42,13 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.ispengya.shortlink.common.constant.RedisConstant.*;
 
@@ -307,7 +308,7 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
                             shortLinkRespDTO.setFullShortUrl(shortLink.getFullShortUrl());
                         }
                         return shortLinkRespDTO;
-                    }).toList();
+                    }).collect(Collectors.toList());
             PageDTO<ShortLinkRespDTO> pageDTO = new PageDTO<>();
             pageDTO.setRecords(shortLinkRespDTOS);
             pageDTO.setPages(linkPage.getPages());

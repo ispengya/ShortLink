@@ -9,9 +9,9 @@ import com.ispengya.shortlink.project.dto.response.ShortLinkBatchCreateRespDTO;
 import com.ispengya.shortlink.project.dto.response.ShortLinkCreateRespDTO;
 import com.ispengya.shortlink.project.dto.response.ShortLinkGroupCountQueryRespDTO;
 import com.ispengya.shortlink.project.dto.response.ShortLinkRespDTO;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
 
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import java.io.IOException;
 import java.util.List;
 

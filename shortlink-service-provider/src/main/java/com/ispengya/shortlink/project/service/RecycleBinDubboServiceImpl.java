@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.ispengya.shortlink.common.constant.RedisConstant.LINK_GOTO_PRE_KEY;
 
@@ -72,7 +73,7 @@ public class RecycleBinDubboServiceImpl implements RecycleBinDubboService {
                             shortLinkRespDTO.setFullShortUrl("http://" + shortLink.getFullShortUrl());
                         }
                         return shortLinkRespDTO;
-                    }).toList();
+                    }).collect(Collectors.toList());
             PageDTO<ShortLinkRespDTO> pageDTO =new PageDTO<>();
             pageDTO.setRecords(shortLinkRespDTOS);
             pageDTO.setPages(linkPage.getPages());

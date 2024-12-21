@@ -2,8 +2,8 @@ package com.ispengya.shortlink.project.util;
 
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
-import jakarta.servlet.http.HttpServletRequest;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.Optional;
 

@@ -5,15 +5,8 @@ import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.ispengya.shortlink.common.constant.MQConstant;
-import static com.ispengya.shortlink.common.constant.ShortLinkConstant.SHORT_LINK_STATS_UIP_KEY;
-import static com.ispengya.shortlink.common.constant.ShortLinkConstant.SHORT_LINK_STATS_UV_KEY;
 import com.ispengya.shortlink.project.domain.LinkStatsMQDTO;
 import com.ispengya.shortlink.project.util.LinkUtil;
-import jakarta.servlet.ServletRequest;
-import jakarta.servlet.ServletResponse;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,11 +15,19 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+
+import static com.ispengya.shortlink.common.constant.ShortLinkConstant.SHORT_LINK_STATS_UIP_KEY;
+import static com.ispengya.shortlink.common.constant.ShortLinkConstant.SHORT_LINK_STATS_UV_KEY;
 
 /**
  * @author 韩志鹏
@@ -42,7 +43,7 @@ public class LinkStatsProducer {
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLocaleAmapKey;
 
-    public void sendMsg(String fullShortUrl,ServletRequest request,
+    public void sendMsg(String fullShortUrl, ServletRequest request,
                         ServletResponse response){
         LinkStatsMQDTO linkStatsMQDTO = buildLinkStatsRecordAndSetUser(fullShortUrl, request, response);
         Message<LinkStatsMQDTO> build = MessageBuilder.withPayload(linkStatsMQDTO).build();
@@ -68,12 +69,16 @@ public class LinkStatsProducer {
             Arrays.stream(cookies)
                     .filter(each -> Objects.equals(each.getName(), "uv"))
                     .findFirst()
-                    .map(Cookie::getValue)
-                    .ifPresentOrElse(each -> {
-                        uv.set(each);
-                        Long uvAdded = stringRedisTemplate.opsForSet().add(SHORT_LINK_STATS_UV_KEY + fullShortUrl, each);
+                    .ifPresent(uvCookie -> {
+                        // 如果找到了 uv cookie
+                        uv.set(uvCookie.getValue());
+                        Long uvAdded = stringRedisTemplate.opsForSet().add(SHORT_LINK_STATS_UV_KEY + fullShortUrl, uvCookie.getValue());
                         uvFirstFlag.set(uvAdded != null && uvAdded > 0L);
-                    }, addResponseCookieTask);
+                    });
+            // 如果没有找到 uv cookie
+            if (uv.get() == null) {
+                addResponseCookieTask.run();  // 这里 addResponseCookieTask 假设是一个 Runnable
+            }
         } else {
             addResponseCookieTask.run();
         }

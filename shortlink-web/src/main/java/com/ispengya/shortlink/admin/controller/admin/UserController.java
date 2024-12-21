@@ -8,9 +8,10 @@ import com.ispengya.shortlink.admin.dto.response.UserLoginRespDTO;
 import com.ispengya.shortlink.admin.service.UserDubboService;
 import com.ispengya.shortlink.common.result.Result;
 import com.ispengya.shortlink.common.result.Results;
-import jakarta.validation.Valid;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.*;
+
+import javax.validation.Valid;
 
 /**
  * @author ispengya

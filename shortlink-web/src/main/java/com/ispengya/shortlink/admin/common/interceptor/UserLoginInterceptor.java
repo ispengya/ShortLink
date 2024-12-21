@@ -4,8 +4,6 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.ispengya.shortlink.admin.common.biz.UserContext;
 import com.ispengya.shortlink.admin.common.biz.UserInfoDTO;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -13,6 +11,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
@@ -39,7 +39,7 @@ public class UserLoginInterceptor implements HandlerInterceptor {
             if (StringUtils.hasText(userInfoStr)){
                 JSONObject userInfoJsonObject = JSON.parseObject(userInfoStr);
                 String userId = userInfoJsonObject.getString("userId");
-                String username1 = URLEncoder.encode(userInfoJsonObject.getString("username"), StandardCharsets.UTF_8);
+                String username1 = URLEncoder.encode(userInfoJsonObject.getString("username"), StandardCharsets.UTF_8.name());
                 UserInfoDTO userInfoDTO = UserInfoDTO.builder().userId(userId).username(username1).build();
                 UserContext.setUser(userInfoDTO);
                 return true;

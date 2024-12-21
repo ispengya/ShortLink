@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * 短链接监控接口实现层
@@ -75,27 +76,29 @@ public class ShortLinkStatsServiceDubboImpl implements ShortLinkStatsDubboServic
             List<ShortLinkStatsAccessDailyRespDTO> daily = new ArrayList<>();
             List<String> rangeDates = DateUtil.rangeToList(DateUtil.parse(requestParam.getStartDate()), DateUtil.parse(requestParam.getEndDate()), DateField.DAY_OF_MONTH).stream()
                     .map(DateUtil::formatDate)
-                    .toList();
-            rangeDates.forEach(each -> listStatsByShortLink.stream()
-                    .filter(item -> Objects.equals(each, DateUtil.formatDate(item.getDate())))
-                    .findFirst()
-                    .ifPresentOrElse(item -> {
-                        ShortLinkStatsAccessDailyRespDTO accessDailyRespDTO = ShortLinkStatsAccessDailyRespDTO.builder()
-                                .date(each)
-                                .pv(item.getPv())
-                                .uv(item.getUv())
-                                .uip(item.getUip())
-                                .build();
-                        daily.add(accessDailyRespDTO);
-                    }, () -> {
-                        ShortLinkStatsAccessDailyRespDTO accessDailyRespDTO = ShortLinkStatsAccessDailyRespDTO.builder()
-                                .date(each)
-                                .pv(0)
-                                .uv(0)
-                                .uip(0)
-                                .build();
-                        daily.add(accessDailyRespDTO);
-                    }));
+                    .collect(Collectors.toList());
+            rangeDates.forEach(each -> {
+                Optional<LinkAccessStatsDO> optional = listStatsByShortLink.stream()
+                        .filter(item -> Objects.equals(each, DateUtil.formatDate(item.getDate())))
+                        .findFirst();
+                if (optional.isPresent()) {
+                    ShortLinkStatsAccessDailyRespDTO accessDailyRespDTO = ShortLinkStatsAccessDailyRespDTO.builder()
+                            .date(each)
+                            .pv(optional.get().getPv())
+                            .uv(optional.get().getUv())
+                            .uip(optional.get().getUip())
+                            .build();
+                    daily.add(accessDailyRespDTO);
+                } else {
+                    ShortLinkStatsAccessDailyRespDTO accessDailyRespDTO = ShortLinkStatsAccessDailyRespDTO.builder()
+                            .date(each)
+                            .pv(0)
+                            .uv(0)
+                            .uip(0)
+                            .build();
+                    daily.add(accessDailyRespDTO);
+                }
+            });
             shortLinkStatsRespDTO.setDaily(daily);
         });
         // 地区访问详情（仅国内）
@@ -293,27 +296,29 @@ public class ShortLinkStatsServiceDubboImpl implements ShortLinkStatsDubboServic
         List<ShortLinkStatsAccessDailyRespDTO> daily = new ArrayList<>();
         List<String> rangeDates = DateUtil.rangeToList(DateUtil.parse(requestParam.getStartDate()), DateUtil.parse(requestParam.getEndDate()), DateField.DAY_OF_MONTH).stream()
                 .map(DateUtil::formatDate)
-                .toList();
-        rangeDates.forEach(each -> listStatsByGroup.stream()
-                .filter(item -> Objects.equals(each, DateUtil.formatDate(item.getDate())))
-                .findFirst()
-                .ifPresentOrElse(item -> {
-                    ShortLinkStatsAccessDailyRespDTO accessDailyRespDTO = ShortLinkStatsAccessDailyRespDTO.builder()
-                            .date(each)
-                            .pv(item.getPv())
-                            .uv(item.getUv())
-                            .uip(item.getUip())
-                            .build();
-                    daily.add(accessDailyRespDTO);
-                }, () -> {
-                    ShortLinkStatsAccessDailyRespDTO accessDailyRespDTO = ShortLinkStatsAccessDailyRespDTO.builder()
-                            .date(each)
-                            .pv(0)
-                            .uv(0)
-                            .uip(0)
-                            .build();
-                    daily.add(accessDailyRespDTO);
-                }));
+                .collect(Collectors.toList());
+        rangeDates.forEach(each -> {
+            Optional<LinkAccessStatsDO> matchingItem = listStatsByGroup.stream()
+                    .filter(item -> Objects.equals(each, DateUtil.formatDate(item.getDate())))
+                    .findFirst();
+            if (matchingItem.isPresent()) {
+                ShortLinkStatsAccessDailyRespDTO accessDailyRespDTO = ShortLinkStatsAccessDailyRespDTO.builder()
+                        .date(each)
+                        .pv(matchingItem.get().getPv())
+                        .uv(matchingItem.get().getUv())
+                        .uip(matchingItem.get().getUip())
+                        .build();
+                daily.add(accessDailyRespDTO);
+            } else {
+                ShortLinkStatsAccessDailyRespDTO accessDailyRespDTO = ShortLinkStatsAccessDailyRespDTO.builder()
+                        .date(each)
+                        .pv(0)
+                        .uv(0)
+                        .uip(0)
+                        .build();
+                daily.add(accessDailyRespDTO);
+            }
+        });
         // 地区访问详情（仅国内）
         List<ShortLinkStatsLocaleCNRespDTO> localeCnStats = new ArrayList<>();
         List<LinkLocaleStatsDO> listedLocaleByGroup = linkLocaleStatsMapper.listLocaleByGroup(requestParam);
@@ -460,7 +465,7 @@ public class ShortLinkStatsServiceDubboImpl implements ShortLinkStatsDubboServic
         IPage<ShortLinkStatsAccessRecordRespDTO> actualResult = linkAccessLogsDOIPage.convert(each -> BeanUtil.toBean(each, ShortLinkStatsAccessRecordRespDTO.class));
         List<String> userAccessLogsList = actualResult.getRecords().stream()
                 .map(ShortLinkStatsAccessRecordRespDTO::getUser)
-                .toList();
+                .collect(Collectors.toList());
         List<Map<String, Object>> uvTypeList = linkAccessLogsMapper.selectUvTypeByUsers(
                 requestParam.getGid(),
                 requestParam.getUsername(),
@@ -500,7 +505,7 @@ public class ShortLinkStatsServiceDubboImpl implements ShortLinkStatsDubboServic
                 .convert(each -> BeanUtil.toBean(each, ShortLinkStatsAccessRecordRespDTO.class));
         List<String> userAccessLogsList = actualResult.getRecords().stream()
                 .map(ShortLinkStatsAccessRecordRespDTO::getUser)
-                .toList();
+                .collect(Collectors.toList());
         List<Map<String, Object>> uvTypeList = linkAccessLogsMapper.selectGroupUvTypeByUsers(
                 requestParam.getGid(),
                 requestParam.getStartDate(),

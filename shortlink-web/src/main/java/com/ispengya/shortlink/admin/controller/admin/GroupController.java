@@ -7,10 +7,10 @@ import com.ispengya.shortlink.admin.dto.response.GroupListRespDTO;
 import com.ispengya.shortlink.admin.service.GroupDubboService;
 import com.ispengya.shortlink.common.result.Result;
 import com.ispengya.shortlink.common.result.Results;
-import jakarta.validation.Valid;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 /**
