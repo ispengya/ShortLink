@@ -14,6 +14,7 @@ import java.util.List;
  */
 @Repository
 public class GroupDao extends ServiceImpl<GroupMapper, Group> {
+
     public Group getGroupByGIdAndUserName(String username, String gid) {
         return lambdaQuery()
                 .eq(Group::getGid,gid)

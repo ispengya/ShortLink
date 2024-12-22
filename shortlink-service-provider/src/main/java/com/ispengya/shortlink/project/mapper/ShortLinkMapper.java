@@ -18,6 +18,10 @@ public interface ShortLinkMapper extends BaseMapper<ShortLinkDO> {
                         @Param("totalPv") Integer totalPv,
                         @Param("totalUv") Integer totalUv,
                         @Param("totalUip") Integer totalUip);
+
+    /**
+     * 查询分组下的短链接数量
+     */
     List<ShortLinkGroupCountQueryRespDTO> getGroupLinkCount(@Param("gidList") List<String> gidList, @Param("username") String username);
 
     /**

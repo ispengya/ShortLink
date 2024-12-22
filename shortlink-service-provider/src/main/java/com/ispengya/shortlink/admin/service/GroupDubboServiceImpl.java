@@ -63,7 +63,6 @@ public class GroupDubboServiceImpl implements GroupDubboService {
                 groupLinkCount.stream().collect(Collectors.toMap(ShortLinkGroupCountQueryRespDTO::getGid,
                         ShortLinkGroupCountQueryRespDTO::getShortLinkCount));
         List<GroupListRespDTO> collect = groupList.stream()
-                //TODO 查询短链接数目
                 .map(group -> {
                     GroupListRespDTO groupListRespDTO = BeanConverter.CONVERTER.converterGroup1(group);
                     groupListRespDTO.setShortLinkCount(gidCount.get(group.getGid()));
