@@ -27,25 +27,26 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLinkDO> {
 
     private final ShortLinkMapper shortLinkMapper;
 
+    /**
+     * 分页查询短链接
+     */
     public IPage<ShortLinkDO> pageLinkList(ShortLinkPageParam shortLinkPageParam) {
-//        IPage<ShortLinkDO> page = new Page<>(shortLinkPageParam.getCurrent(), shortLinkPageParam.getSize());
-//        LambdaQueryWrapper<ShortLinkDO> queryWrapper = new LambdaQueryWrapper<>();
-//        queryWrapper.eq(ShortLinkDO::getGid, shortLinkPageParam.getGid());
-//        queryWrapper.eq(ShortLinkDO::getUsername, shortLinkPageParam.getUsername());
-//        queryWrapper.eq(ShortLinkDO::getEnableStatus, YesOrNoEnum.YES.getCode());
-//        queryWrapper.eq(ShortLinkDO::getDelFlag, YesOrNoEnum.YES.getCode());
-//        return baseMapper.selectPage(page, queryWrapper);
         IPage<ShortLinkDO> page = new Page<>(shortLinkPageParam.getCurrent(), shortLinkPageParam.getSize());
         return shortLinkMapper.pageLink(page, shortLinkPageParam);
     }
 
+    /**
+     * 查询分组下的短链接数量
+     */
     public List<ShortLinkGroupCountQueryRespDTO> getGroupLinkCount(List<String> requestParam, String username) {
         return shortLinkMapper.getGroupLinkCount(requestParam, username);
     }
 
-    public ShortLinkDO getOneByConditions(String username, String fullShortUrl) {
+    /**
+     * 获取单个短链接
+     */
+    public ShortLinkDO getOneByConditions(/*没用到就是V2版本*/String username, String fullShortUrl) {
         return lambdaQuery()
-                .eq(ShortLinkDO::getUsername, username)
                 .eq(ShortLinkDO::getShortUri, getShortUri(fullShortUrl))
                 .eq(ShortLinkDO::getEnableStatus, YesOrNoEnum.YES.getCode())
                 .eq(ShortLinkDO::getDelFlag, YesOrNoEnum.YES.getCode())

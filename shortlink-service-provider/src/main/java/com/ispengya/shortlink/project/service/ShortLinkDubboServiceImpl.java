@@ -1,25 +1,27 @@
 package com.ispengya.shortlink.project.service;
 
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.lang.UUID;
 import cn.hutool.core.text.StrBuilder;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.ispengya.shortlink.common.algorithm.link.GenerateService;
 import com.ispengya.shortlink.common.constant.RedisConstant;
 import com.ispengya.shortlink.common.constant.ShortLinkConstant;
 import com.ispengya.shortlink.common.converter.BeanConverter;
 import com.ispengya.shortlink.common.converter.ShortLinkConverter;
 import com.ispengya.shortlink.common.enums.ValidTypeEnum;
-import com.ispengya.shortlink.common.enums.YesOrNoEnum;
 import com.ispengya.shortlink.common.exception.ServiceException;
 import com.ispengya.shortlink.common.mq.producer.LinkStatsProducer;
 import com.ispengya.shortlink.common.result.PageDTO;
 import com.ispengya.shortlink.common.util.AssertUtil;
 import com.ispengya.shortlink.project.dao.ShortLinkDao;
 import com.ispengya.shortlink.project.dao.ShortLinkGoToDao;
+import com.ispengya.shortlink.project.dao.ShortLinkStatsDao;
 import com.ispengya.shortlink.project.domain.ShortLinkDO;
 import com.ispengya.shortlink.project.domain.ShortLinkGotoDO;
+import com.ispengya.shortlink.project.domain.dao.LinkStatsTodayDTO;
 import com.ispengya.shortlink.project.dto.request.ShortLinkBatchCreateParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkCreateParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkPageParam;
@@ -48,6 +50,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.ispengya.shortlink.common.constant.RedisConstant.*;
@@ -65,6 +68,8 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
     @Value("${short-link.official.domain}")
     private String officialDomain;
     private final ShortLinkDao shortLinkDao;
+    private final GenerateService generateService;
+    private final ShortLinkStatsDao shortLinkStatsDao;
     private final ShortLinkGoToDao shortLinkGoToDao;
     private final RBloomFilter<String> shortUriCreateCachePenetrationBloomFilter;
     private final StringRedisTemplate stringRedisTemplate;
@@ -77,44 +82,43 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
     public void jumpUrlV1(String shortUri, ServletRequest request, ServletResponse response) throws IOException {
         String serverName = request.getServerName();
         String fullShortUrl = serverName + "/" + shortUri;
-        //TODO
-        String originLink = null;
+
+        //获取原始链接
+        String originLink = stringRedisTemplate.opsForValue().get(LINK_GOTO_PRE_KEY + fullShortUrl);
         if (StrUtil.isEmpty(originLink)) {
+            //分布式锁避免缓存击穿
             RLock lock = redissonClient.getLock(LOCK_GET_ORIGIN_LINK_PRE_KEY + fullShortUrl);
             lock.lock();
             try {
                 //双重检测
                 originLink = stringRedisTemplate.opsForValue().get(LINK_GOTO_PRE_KEY + fullShortUrl);
                 if (StrUtil.isBlank(originLink)) {
-                    //获取路由表
-                    String gotoIsNullShortLink = stringRedisTemplate.opsForValue().get(LINK_GOTO_IS_NULL_PRE_KEY+
+                    //缓存null值，避免缓存穿透
+                    String gotoIsNullShortLink = stringRedisTemplate.opsForValue().get(LINK_GOTO_IS_NULL_PRE_KEY +
                             fullShortUrl);
                     if (StrUtil.isNotBlank(gotoIsNullShortLink)) {
                         ((HttpServletResponse) response).sendRedirect("/page/notfound");
                         return;
                     }
-                    ShortLinkGotoDO shortLinkGotoDO = shortLinkGoToDao.getByFullShortUrl(fullShortUrl);
-                    if (shortLinkGotoDO == null) {
+
+                    //load db
+                    ShortLinkDO linkDO = shortLinkDao.getOneByConditions(null, fullShortUrl);
+                    if (linkDO == null) {
                         stringRedisTemplate.opsForValue().set(LINK_GOTO_IS_NULL_PRE_KEY + fullShortUrl, "null");
                         ((HttpServletResponse) response).sendRedirect("/page/notfound");
                         return;
                     }
-                    ShortLinkDO shortLinkDO = shortLinkDao.getOneByConditions(shortLinkGotoDO.getUsername(), shortLinkGotoDO.getFullShortUrl());
-                    if (shortLinkDO == null || (shortLinkDO.getValidDate() != null && shortLinkDO.getValidDateType().equals(ValidTypeEnum.CUSTOM.getType()) && shortLinkDO.getValidDate().before(new Date()))) {
-                        stringRedisTemplate.opsForValue().set(LINK_GOTO_IS_NULL_PRE_KEY + fullShortUrl, "null", 30, TimeUnit.MINUTES);
-                        ((HttpServletResponse) response).sendRedirect("/page/notfound");
-                        return;
-                    }
+
                     //判断有效期是否永久
-                    if (!Objects.equals(shortLinkDO.getValidDateType(), ValidTypeEnum.FOREVER.getType())) {
-                        stringRedisTemplate.opsForValue().set(LINK_GOTO_PRE_KEY + fullShortUrl, shortLinkDO.getOriginUrl(),
-                                LinkUtil.getLinkCacheValidTime(shortLinkDO.getValidDate()), TimeUnit.MILLISECONDS
+                    if (!Objects.equals(linkDO.getValidDateType(), ValidTypeEnum.FOREVER.getType())) {
+                        stringRedisTemplate.opsForValue().set(LINK_GOTO_PRE_KEY + fullShortUrl, linkDO.getOriginUrl(),
+                                LinkUtil.getLinkCacheValidTime(linkDO.getValidDate()), TimeUnit.MILLISECONDS
                         );
                     } else {
                         //在缓存过期默认一个月
-                        stringRedisTemplate.opsForValue().set(LINK_GOTO_PRE_KEY + fullShortUrl, shortLinkDO.getOriginUrl(), ShortLinkConstant.DEFAULT_CACHE_VALID_TIME, TimeUnit.SECONDS);
+                        stringRedisTemplate.opsForValue().set(LINK_GOTO_PRE_KEY + fullShortUrl, linkDO.getOriginUrl(), ShortLinkConstant.DEFAULT_CACHE_VALID_TIME, TimeUnit.SECONDS);
                     }
-                    originLink = shortLinkDO.getOriginUrl();
+                    originLink = linkDO.getOriginUrl();
                 }
             } finally {
                 lock.unlock();
@@ -134,7 +138,12 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
     @Override
     public ShortLinkCreateRespDTO createLink(ShortLinkCreateParam shortLinkCreateParam) {
         //生成短链接uri
-        String shortUri = generateSuffix(shortLinkCreateParam);
+        String shortUri = null;
+        try {
+            shortUri = generateSuffix(shortLinkCreateParam);
+        } catch (InterruptedException e) {
+            log.error("generate uri error:{}", e.getMessage());
+        }
         String fullShortUrl = StrBuilder.create(shortLinkCreateParam.getDomain())
                 .append("/")
                 .append(shortUri)
@@ -144,11 +153,8 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
         //构建实体
         ShortLinkDO shortLinkDO = ShortLinkConverter.buildShortLink(shortUri, fullShortUrl, shortLinkCreateParam, shortLinkCreateParam.getUsername(), favicon);
         //构建路由表实体
-        ShortLinkGotoDO shortLinkGotoDO = ShortLinkGotoDO.builder().username(shortLinkCreateParam.getUsername()).gid(
-                shortLinkCreateParam.getGid()).fullShortUrl(shortLinkDO.getFullShortUrl()).delFlag(YesOrNoEnum.YES.getCode()).build();
         try {
             shortLinkDao.save(shortLinkDO);
-            shortLinkGoToDao.save(shortLinkGotoDO);
         } catch (DuplicateKeyException ex) {
             log.warn("短链接：{} 重复入库", fullShortUrl);
             throw new ServiceException("短链接生成重复");
@@ -167,58 +173,60 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
     }
 
     @Override
+    @Deprecated
     public ShortLinkCreateRespDTO createShortLinkByLock(ShortLinkCreateParam requestParam) {
-        String fullShortUrl;
-        // 为什么说布隆过滤器性能远胜于分布式锁？详情查看：https://nageoffer.com/shortlink/question
-        RLock lock = redissonClient.getLock(SHORT_LINK_CREATE_LOCK_KEY);
-        lock.lock();
-        try {
-            String shortLinkSuffix = generateSuffixByLock(requestParam);
-            fullShortUrl = StrBuilder.create(requestParam.getDomain())
-                    .append("/")
-                    .append(shortLinkSuffix)
-                    .toString();
-            ShortLinkDO shortLinkDO = ShortLinkDO.builder()
-                    .domain(requestParam.getDomain())
-                    .originUrl(requestParam.getOriginUrl())
-                    .gid(requestParam.getGid())
-                    .username(requestParam.getUsername())
-                    .createdType(requestParam.getCreatedType())
-                    .validDateType(requestParam.getValidDateType())
-                    .validDate(requestParam.getValidDate())
-                    .describe(requestParam.getDescribe())
-                    .shortUri(shortLinkSuffix)
-                    .enableStatus(0)
-                    .totalPv(0)
-                    .totalUv(0)
-                    .totalUip(0)
-                    .fullShortUrl(fullShortUrl)
-                    .favicon(urlService.getFavicon(requestParam.getOriginUrl()))
-                    .build();
-            ShortLinkGotoDO linkGotoDO = ShortLinkGotoDO.builder()
-                    .fullShortUrl(fullShortUrl)
-                    .gid(requestParam.getGid())
-                    .username(requestParam.getUsername())
-                    .build();
-            try {
-                shortLinkDao.save(shortLinkDO);
-                shortLinkGoToDao.save(linkGotoDO);
-            } catch (DuplicateKeyException ex) {
-                throw new ServiceException(String.format("短链接：%s 生成重复", fullShortUrl));
-            }
-            stringRedisTemplate.opsForValue().set(
-                    LINK_GOTO_PRE_KEY + fullShortUrl,
-                    requestParam.getOriginUrl(),
-                    LinkUtil.getLinkCacheValidTime(requestParam.getValidDate()), TimeUnit.MILLISECONDS
-            );
-        } finally {
-            lock.unlock();
-        }
-        return ShortLinkCreateRespDTO.builder()
-                .fullShortUrl("http://" + fullShortUrl)
-                .originUrl(requestParam.getOriginUrl())
-                .gid(requestParam.getGid())
-                .build();
+//        String fullShortUrl;
+//        // 为什么说布隆过滤器性能远胜于分布式锁？详情查看：https://nageoffer.com/shortlink/question
+//        RLock lock = redissonClient.getLock(SHORT_LINK_CREATE_LOCK_KEY);
+//        lock.lock();
+//        try {
+//            String shortLinkSuffix = generateSuffixByLock(requestParam);
+//            fullShortUrl = StrBuilder.create(requestParam.getDomain())
+//                    .append("/")
+//                    .append(shortLinkSuffix)
+//                    .toString();
+//            ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+//                    .domain(requestParam.getDomain())
+//                    .originUrl(requestParam.getOriginUrl())
+//                    .gid(requestParam.getGid())
+//                    .username(requestParam.getUsername())
+//                    .createdType(requestParam.getCreatedType())
+//                    .validDateType(requestParam.getValidDateType())
+//                    .validDate(requestParam.getValidDate())
+//                    .describe(requestParam.getDescribe())
+//                    .shortUri(shortLinkSuffix)
+//                    .enableStatus(0)
+//                    .totalPv(0)
+//                    .totalUv(0)
+//                    .totalUip(0)
+//                    .fullShortUrl(fullShortUrl)
+//                    .favicon(urlService.getFavicon(requestParam.getOriginUrl()))
+//                    .build();
+//            ShortLinkGotoDO linkGotoDO = ShortLinkGotoDO.builder()
+//                    .fullShortUrl(fullShortUrl)
+//                    .gid(requestParam.getGid())
+//                    .username(requestParam.getUsername())
+//                    .build();
+//            try {
+//                shortLinkDao.save(shortLinkDO);
+//                shortLinkGoToDao.save(linkGotoDO);
+//            } catch (DuplicateKeyException ex) {
+//                throw new ServiceException(String.format("短链接：%s 生成重复", fullShortUrl));
+//            }
+//            stringRedisTemplate.opsForValue().set(
+//                    LINK_GOTO_PRE_KEY + fullShortUrl,
+//                    requestParam.getOriginUrl(),
+//                    LinkUtil.getLinkCacheValidTime(requestParam.getValidDate()), TimeUnit.MILLISECONDS
+//            );
+//        } finally {
+//            lock.unlock();
+//        }
+//        return ShortLinkCreateRespDTO.builder()
+//                .fullShortUrl("http://" + fullShortUrl)
+//                .originUrl(requestParam.getOriginUrl())
+//                .gid(requestParam.getGid())
+//                .build();
+        return null;
     }
 
     @Override
@@ -294,12 +302,17 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
 
     @Override
     public PageDTO<ShortLinkRespDTO> pageLink(ShortLinkPageParam shortLinkPageParam) {
+        //查询link集合
         IPage<ShortLinkDO> linkPage = shortLinkDao.pageLinkList(shortLinkPageParam);
-        List<ShortLinkDO> links = Optional.ofNullable(linkPage).map(IPage::getRecords).get();
-        if (CollUtil.isNotEmpty(links)) {
+        if (Objects.nonNull(linkPage) && CollectionUtil.isNotEmpty(linkPage.getRecords())) {
+            //查今日统计数据
+            List<LinkStatsTodayDTO> statsTodayDTOList = shortLinkStatsDao.selectListByShortUrls(linkPage.getRecords().stream().map(ShortLinkDO::getFullShortUrl).collect(Collectors.toList()));
+            Map<String, LinkStatsTodayDTO> linkStatsTodayMap = statsTodayDTOList.stream().collect(Collectors.toMap(LinkStatsTodayDTO::getShortUrl, Function.identity()));
+            List<ShortLinkDO> links = linkPage.getRecords();
             List<ShortLinkRespDTO> shortLinkRespDTOS = links.stream()
                     .map(shortLink -> {
                         ShortLinkRespDTO shortLinkRespDTO = BeanConverter.CONVERTER.converterLink1(shortLink);
+
                         //判断domain是否是自定义的
                         if (shortLink.getDomain().equals(officialDomain)) {
                             //TODO 真正上线是https
@@ -307,8 +320,16 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
                         } else {
                             shortLinkRespDTO.setFullShortUrl(shortLink.getFullShortUrl());
                         }
+
+                        //设置今日统计数据
+                        LinkStatsTodayDTO linkStatsTodayDTO = linkStatsTodayMap.get(shortLink.getFullShortUrl());
+                        shortLinkRespDTO.setTodayPv(linkStatsTodayDTO.getTodayPv());
+                        shortLinkRespDTO.setTodayUv(linkStatsTodayDTO.getTodayUv());
+                        shortLinkRespDTO.setTodayUip(linkStatsTodayDTO.getTodayUip());
+
                         return shortLinkRespDTO;
                     }).collect(Collectors.toList());
+            //返回分页数据
             PageDTO<ShortLinkRespDTO> pageDTO = new PageDTO<>();
             pageDTO.setRecords(shortLinkRespDTOS);
             pageDTO.setPages(linkPage.getPages());
@@ -353,7 +374,7 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
                 .build();
     }
 
-    private String generateSuffix(ShortLinkCreateParam dto) {
+    private String generateSuffix(ShortLinkCreateParam dto) throws InterruptedException {
         int customGenerateCount = 0;
         String shorUri;
         while (true) {
@@ -361,9 +382,10 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
                 throw new ServiceException("短链接频繁生成，请稍后再试");
             }
             //加上时间戳,防止同样的短链接在不同时间无法申请
-            String originUrl = dto.getOriginUrl();
-            originUrl += UUID.randomUUID().toString();
-            shorUri = HashUtil.hashToBase62(originUrl);
+//            String originUrl = dto.getOriginUrl();
+//            originUrl += UUID.randomUUID().toString();
+//            shorUri = HashUtil.hashToBase62(originUrl);
+            shorUri = generateService.generateShortUrl(dto.getOriginUrl());
             if (!shortUriCreateCachePenetrationBloomFilter.contains(dto.getDomain() + "/" + shorUri)) {
                 break;
             }

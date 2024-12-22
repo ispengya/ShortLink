@@ -21,7 +21,7 @@ public class IncrementIdAlgorithm implements GenerateService , InitializingBean 
     @Value("${link.increment.bizTag}")
     private String incrementBizTag;
 
-    public static LinkedBlockingQueue<Long> idQueue = new LinkedBlockingQueue<>(1000);
+    public static LinkedBlockingQueue<Long> idQueue = new LinkedBlockingQueue<>(10000);
 
     @Override
     public String generateShortUrl(String longUrl) throws InterruptedException {
