@@ -6,4 +6,5 @@ package com.ispengya.shortlink.common.algorithm.link;
  * @create: 2024-12-18 10:37
  **/
 public interface GenerateService {
+    String generateShortUrl(String longUrl) throws InterruptedException;
 }

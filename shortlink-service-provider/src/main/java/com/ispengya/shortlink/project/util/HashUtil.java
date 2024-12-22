@@ -1,5 +1,6 @@
 package com.ispengya.shortlink.project.util;
 
+import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.lang.hash.MurmurHash;
 
 import java.util.HashMap;
@@ -14,8 +15,8 @@ public class HashUtil {
     public static final Map<Integer, Set<Integer>> map=new HashMap<>();
 
     static {
-        map.put(0, Set.of(0,1,2));
-        map.put(1, Set.of(3,4,5));
+        map.put(0, CollectionUtil.newHashSet(0,1,2));
+        map.put(1, CollectionUtil.newHashSet(3,4,5));
     }
 
     private static final char[] CHARS = new char[]{

@@ -64,3 +64,7 @@ rocketmq:
 
 logging:
   config: classpath:log4j2-spring.xml
+
+increment:
+  domain: ${link.increment.domain}
+  bizTag: ${link.increment.bizTag}
