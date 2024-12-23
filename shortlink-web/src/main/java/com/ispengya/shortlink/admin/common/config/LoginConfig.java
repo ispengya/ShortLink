@@ -13,8 +13,10 @@ import java.util.List;
 
 @Configuration
 public class LoginConfig implements WebMvcConfigurer {
+
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         InterceptorRegistration registration = registry.addInterceptor(new UserLoginInterceptor(stringRedisTemplate));

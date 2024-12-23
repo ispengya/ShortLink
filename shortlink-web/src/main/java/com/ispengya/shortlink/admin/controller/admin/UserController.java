@@ -9,6 +9,8 @@ import com.ispengya.shortlink.admin.service.UserDubboService;
 import com.ispengya.shortlink.common.result.Result;
 import com.ispengya.shortlink.common.result.Results;
 import org.apache.dubbo.config.annotation.DubboReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -21,6 +23,7 @@ import javax.validation.Valid;
 @RequestMapping("/api/short-link/admin/v1")
 public class UserController {
 
+    private static final Logger log = LoggerFactory.getLogger(UserController.class);
     @DubboReference(retries = 0)
     private UserDubboService userDubboService;
 

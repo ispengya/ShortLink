@@ -4,7 +4,7 @@
 
     <select id="selectListByShortUrl" resultType="com.ispengya.shortlink.project.domain.dao.LinkStatsTodayDTO">
         select
-            tlst.full_short_url AS shortUrl
+            tlst.full_short_url AS shortUrl,
             COALESCE(tlst.today_pv, 0) AS todayPv,
             COALESCE(tlst.today_uv, 0) AS todayUv,
             COALESCE(tlst.today_uip, 0) AS todayUip

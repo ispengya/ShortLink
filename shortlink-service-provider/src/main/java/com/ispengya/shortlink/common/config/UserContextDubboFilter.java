@@ -20,6 +20,7 @@ public class UserContextDubboFilter implements Filter {
         //获取用户信息
         String userId = invocation.getAttachment("userId");
         String username = invocation.getAttachment("username");
+        log.info("userId : {}, username : {}", userId, username);
         UserInfoDTO userInfoDTO = UserInfoDTO.builder()
                 .userId(userId)
                 .username(username)

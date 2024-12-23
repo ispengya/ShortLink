@@ -17,7 +17,7 @@ dubbo:
   registry:
     address: nacos://${link.nacos.ip}:${link.nacos.port}?username=${link.nacos.username}&password=${link.nacos.password}
   provider:
-    filter: -exception
+    filter: -exception, tracing
 
 spring:
   application:
@@ -31,13 +31,12 @@ spring:
     view:
       prefix: /templates/
       suffix: .html
-  data:
     ##############redis#################
-    redis:
-      host: ${link.redis.ip}
-      port: ${link.redis.port}
-      password: ${link.redis.password}
-      database: ${link.redis.database}
+  redis:
+    host: ${link.redis.ip}
+    port: ${link.redis.port}
+    password: ${link.redis.password}
+    database: ${link.redis.database}
   profiles:
     active: prod
 mybatis-plus:
@@ -64,6 +63,11 @@ rocketmq:
 
 logging:
   config: classpath:log4j2-spring.xml
+
+zipkin:
+  base:
+    url: http://127.0.0.1:9411/api/v2/spans
+  enable: true
 
 increment:
   domain: ${link.increment.domain}

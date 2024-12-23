@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
  */
 @Component
 public class UserLoginInterceptor implements HandlerInterceptor {
+
     private StringRedisTemplate stringRedisTemplate;
 
     public UserLoginInterceptor(StringRedisTemplate stringRedisTemplate) {

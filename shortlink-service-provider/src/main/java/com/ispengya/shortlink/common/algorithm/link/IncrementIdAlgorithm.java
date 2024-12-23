@@ -5,6 +5,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -21,7 +22,7 @@ public class IncrementIdAlgorithm implements GenerateService , InitializingBean 
     @Value("${link.increment.bizTag}")
     private String incrementBizTag;
 
-    public static LinkedBlockingQueue<Long> idQueue = new LinkedBlockingQueue<>(10000);
+    public static LinkedBlockingQueue<Long> idQueue = new LinkedBlockingQueue<>(10);
 
     @Override
     public String generateShortUrl(String longUrl) throws InterruptedException {
@@ -31,10 +32,16 @@ public class IncrementIdAlgorithm implements GenerateService , InitializingBean 
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        while (true){
-            long id = Long.parseLong(HttpUtils.httpGet(incrementDomain + incrementBizTag));
-            idQueue.put(id);
-        }
+        Executors.newSingleThreadExecutor().execute(()->{
+            while (true){
+                long id = Long.parseLong(HttpUtils.httpGet(incrementDomain + incrementBizTag));
+                try {
+                    idQueue.put(id);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
     }
 
     // 定义62进制字符集

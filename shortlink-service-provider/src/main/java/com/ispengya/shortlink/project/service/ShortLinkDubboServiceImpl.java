@@ -125,6 +125,7 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
         if (StrUtil.isNotBlank(originLink)) {
             //异步统计
             linkStatsProducer.sendMsg(fullShortUrl, request, response);
+            log.info("jump url : {} , originLink : {}", fullShortUrl, originLink);
             ((HttpServletResponse) response).sendRedirect(originLink);
         } else {
             ((HttpServletResponse) response).sendRedirect("/page/notfound");
@@ -151,6 +152,7 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
         //构建路由表实体
         try {
             shortLinkDao.save(shortLinkDO);
+            log.info("create link success : {}", shortLinkDO);
         } catch (DuplicateKeyException ex) {
             log.warn("短链接：{} 重复入库", fullShortUrl);
             throw new ServiceException("短链接生成重复");
@@ -227,7 +229,7 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
 
     @Override
     @Transactional
-    public void updateShortLinkV2(ShortLinkUpdateParam requestParam){
+    public void updateShortLinkV2(ShortLinkUpdateParam requestParam) {
         //查询短链接
         ShortLinkDO oldLink = shortLinkDao.getOneByConditions(requestParam.getUsername(), requestParam.getFullShortUrl());
         AssertUtil.notNull(oldLink, "短链接不存在");
@@ -355,11 +357,16 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
                         }
 
                         //设置今日统计数据
-                        LinkStatsTodayDTO linkStatsTodayDTO = linkStatsTodayMap.get(shortLink.getFullShortUrl());
-                        shortLinkRespDTO.setTodayPv(linkStatsTodayDTO.getTodayPv());
-                        shortLinkRespDTO.setTodayUv(linkStatsTodayDTO.getTodayUv());
-                        shortLinkRespDTO.setTodayUip(linkStatsTodayDTO.getTodayUip());
-
+                        if (Objects.nonNull(linkStatsTodayMap) && linkStatsTodayMap.containsKey(shortLink.getFullShortUrl())) {
+                            LinkStatsTodayDTO linkStatsTodayDTO = linkStatsTodayMap.get(shortLink.getFullShortUrl());
+                            shortLinkRespDTO.setTodayPv(linkStatsTodayDTO.getTodayPv());
+                            shortLinkRespDTO.setTodayUv(linkStatsTodayDTO.getTodayUv());
+                            shortLinkRespDTO.setTodayUip(linkStatsTodayDTO.getTodayUip());
+                        } else {
+                            shortLinkRespDTO.setTodayPv(0);
+                            shortLinkRespDTO.setTodayUv(0);
+                            shortLinkRespDTO.setTodayUip(0);
+                        }
                         return shortLinkRespDTO;
                     }).collect(Collectors.toList());
             //返回分页数据
