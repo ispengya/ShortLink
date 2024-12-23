@@ -127,6 +127,9 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLinkDO> {
         return StrUtil.subAfter(fullShortUrl, '/', true);
     }
 
+    /**
+     * 更新链接统计数据
+     */
     public void incrementStats(String username, String fullShortUrl, Integer totalPv, Integer totalUv,
                                Integer totalUip) {
         String shortUri = getShortUri(fullShortUrl);

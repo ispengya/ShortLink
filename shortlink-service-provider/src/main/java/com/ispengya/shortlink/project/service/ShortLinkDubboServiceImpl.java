@@ -7,7 +7,6 @@ import cn.hutool.core.text.StrBuilder;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.ispengya.shortlink.common.algorithm.link.GenerateService;
-import com.ispengya.shortlink.common.constant.RedisConstant;
 import com.ispengya.shortlink.common.constant.ShortLinkConstant;
 import com.ispengya.shortlink.common.converter.BeanConverter;
 import com.ispengya.shortlink.common.converter.ShortLinkConverter;
@@ -17,10 +16,8 @@ import com.ispengya.shortlink.common.mq.producer.LinkStatsProducer;
 import com.ispengya.shortlink.common.result.PageDTO;
 import com.ispengya.shortlink.common.util.AssertUtil;
 import com.ispengya.shortlink.project.dao.ShortLinkDao;
-import com.ispengya.shortlink.project.dao.ShortLinkGoToDao;
 import com.ispengya.shortlink.project.dao.ShortLinkStatsDao;
 import com.ispengya.shortlink.project.domain.ShortLinkDO;
-import com.ispengya.shortlink.project.domain.ShortLinkGotoDO;
 import com.ispengya.shortlink.project.domain.dao.LinkStatsTodayDTO;
 import com.ispengya.shortlink.project.dto.request.ShortLinkBatchCreateParam;
 import com.ispengya.shortlink.project.dto.request.ShortLinkCreateParam;
@@ -32,12 +29,9 @@ import com.ispengya.shortlink.project.util.LinkUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboService;
-import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
-import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -70,12 +64,10 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
     private final ShortLinkDao shortLinkDao;
     private final GenerateService generateService;
     private final ShortLinkStatsDao shortLinkStatsDao;
-    private final ShortLinkGoToDao shortLinkGoToDao;
     private final RBloomFilter<String> shortUriCreateCachePenetrationBloomFilter;
     private final StringRedisTemplate stringRedisTemplate;
     private final RedissonClient redissonClient;
-    private final UrlDubboServiceImpl urlService;
-    private final RocketMQTemplate rocketMQTemplate;
+    //private final UrlDubboServiceImpl urlService;
     private final LinkStatsProducer linkStatsProducer;
 
     @Override
@@ -271,74 +263,74 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
     @Override
     @Transactional
     public void updateShortLink(ShortLinkUpdateParam requestParam) {
-        //查询更改的短链接
-        ShortLinkDO oldLink = shortLinkDao.getOneByConditions(requestParam.getUsername(), requestParam.getFullShortUrl());
-        AssertUtil.notNull(oldLink, "短链接不存在");
-
-        //分组是否变更
-        if (Objects.equals(oldLink.getGid(), requestParam.getGid())) {
-            ShortLinkDO shortLinkDO = new ShortLinkDO();
-            BeanUtils.copyProperties(oldLink, shortLinkDO);
-            shortLinkDO.setOriginUrl(requestParam.getOriginUrl());
-            shortLinkDO.setDescribe(requestParam.getDescribe());
-            shortLinkDO.setValidDateType(requestParam.getValidDateType());
-            shortLinkDO.setValidDate(requestParam.getValidDate());
-            shortLinkDao.save(shortLinkDO);
-            shortLinkDao.delete(oldLink);
-        } else {
-            // 为什么分组变更要加锁，
-            RReadWriteLock
-                    readWriteLock = redissonClient.getReadWriteLock(String.format(RedisConstant.LOCK_GID_UPDATE_KEY,
-                    requestParam.getFullShortUrl()));
-            RLock rLock = readWriteLock.writeLock();
-            rLock.lock();
-            try {
-//                ShortLinkDO delShortLinkDO = ShortLinkDO.builder()
+//        //查询更改的短链接
+//        ShortLinkDO oldLink = shortLinkDao.getOneByConditions(requestParam.getUsername(), requestParam.getFullShortUrl());
+//        AssertUtil.notNull(oldLink, "短链接不存在");
+//
+//        //分组是否变更
+//        if (Objects.equals(oldLink.getGid(), requestParam.getGid())) {
+//            ShortLinkDO shortLinkDO = new ShortLinkDO();
+//            BeanUtils.copyProperties(oldLink, shortLinkDO);
+//            shortLinkDO.setOriginUrl(requestParam.getOriginUrl());
+//            shortLinkDO.setDescribe(requestParam.getDescribe());
+//            shortLinkDO.setValidDateType(requestParam.getValidDateType());
+//            shortLinkDO.setValidDate(requestParam.getValidDate());
+//            shortLinkDao.save(shortLinkDO);
+//            shortLinkDao.delete(oldLink);
+//        } else {
+//            // 为什么分组变更要加锁，
+//            RReadWriteLock
+//                    readWriteLock = redissonClient.getReadWriteLock(String.format(RedisConstant.LOCK_GID_UPDATE_KEY,
+//                    requestParam.getFullShortUrl()));
+//            RLock rLock = readWriteLock.writeLock();
+//            rLock.lock();
+//            try {
+////                ShortLinkDO delShortLinkDO = ShortLinkDO.builder()
+////                        .build();
+////                delShortLinkDO.setDelFlag(1);
+////                delShortLinkDO.setFullShortUrl(oldLink.getFullShortUrl());
+////                delShortLinkDO.setUsername(oldLink.getUsername());
+////                shortLinkDao.updateByConditions(delShortLinkDO);
+//                ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+//                        .domain(officialDomain)
+//                        .username(oldLink.getUsername())
+//                        .originUrl(requestParam.getOriginUrl())
+//                        .gid(requestParam.getGid())
+//                        .createdType(oldLink.getCreatedType())
+//                        .validDateType(requestParam.getValidDateType())
+//                        .validDate(requestParam.getValidDate())
+//                        .describe(requestParam.getDescribe())
+//                        .shortUri(oldLink.getShortUri())
+//                        .enableStatus(oldLink.getEnableStatus())
+//                        .totalPv(oldLink.getTotalPv())
+//                        .totalUv(oldLink.getTotalUv())
+//                        .totalUip(oldLink.getTotalUip())
+//                        .fullShortUrl(oldLink.getFullShortUrl())
+//                        .favicon(urlService.getFavicon(requestParam.getOriginUrl()))
 //                        .build();
-//                delShortLinkDO.setDelFlag(1);
-//                delShortLinkDO.setFullShortUrl(oldLink.getFullShortUrl());
-//                delShortLinkDO.setUsername(oldLink.getUsername());
-//                shortLinkDao.updateByConditions(delShortLinkDO);
-                ShortLinkDO shortLinkDO = ShortLinkDO.builder()
-                        .domain(officialDomain)
-                        .username(oldLink.getUsername())
-                        .originUrl(requestParam.getOriginUrl())
-                        .gid(requestParam.getGid())
-                        .createdType(oldLink.getCreatedType())
-                        .validDateType(requestParam.getValidDateType())
-                        .validDate(requestParam.getValidDate())
-                        .describe(requestParam.getDescribe())
-                        .shortUri(oldLink.getShortUri())
-                        .enableStatus(oldLink.getEnableStatus())
-                        .totalPv(oldLink.getTotalPv())
-                        .totalUv(oldLink.getTotalUv())
-                        .totalUip(oldLink.getTotalUip())
-                        .fullShortUrl(oldLink.getFullShortUrl())
-                        .favicon(urlService.getFavicon(requestParam.getOriginUrl()))
-                        .build();
-                shortLinkDao.updateByConditions(shortLinkDO);
-                ShortLinkGotoDO shortLinkGotoDO =
-                        shortLinkGoToDao.getByFullShortUrlAndUserName(requestParam.getFullShortUrl(),
-                                oldLink.getUsername());
-                shortLinkGoToDao.deleteByConditions(shortLinkGotoDO);
-                shortLinkGotoDO.setGid(requestParam.getGid());
-                shortLinkGoToDao.save(shortLinkGotoDO);
-            } finally {
-                rLock.unlock();
-            }
-        }
-        // 短链接如何保障缓存和数据库一致性？详情查看：https://nageoffer.com/shortlink/question
-        if (!Objects.equals(oldLink.getValidDateType(), requestParam.getValidDateType())
-                || !Objects.equals(oldLink.getValidDate(), requestParam.getValidDate())
-                || !Objects.equals(oldLink.getOriginUrl(), requestParam.getOriginUrl())) {
-            stringRedisTemplate.delete(LINK_GOTO_PRE_KEY + requestParam.getFullShortUrl());
-            Date currentDate = new Date();
-            if (oldLink.getValidDate() != null && oldLink.getValidDate().before(currentDate)) {
-                if (Objects.equals(requestParam.getValidDateType(), ValidTypeEnum.FOREVER.getType()) || requestParam.getValidDate().after(currentDate)) {
-                    stringRedisTemplate.delete(LINK_GOTO_IS_NULL_PRE_KEY + requestParam.getFullShortUrl());
-                }
-            }
-        }
+//                shortLinkDao.updateByConditions(shortLinkDO);
+//                ShortLinkGotoDO shortLinkGotoDO =
+//                        shortLinkGoToDao.getByFullShortUrlAndUserName(requestParam.getFullShortUrl(),
+//                                oldLink.getUsername());
+//                shortLinkGoToDao.deleteByConditions(shortLinkGotoDO);
+//                shortLinkGotoDO.setGid(requestParam.getGid());
+//                shortLinkGoToDao.save(shortLinkGotoDO);
+//            } finally {
+//                rLock.unlock();
+//            }
+//        }
+//        // 短链接如何保障缓存和数据库一致性？详情查看：https://nageoffer.com/shortlink/question
+//        if (!Objects.equals(oldLink.getValidDateType(), requestParam.getValidDateType())
+//                || !Objects.equals(oldLink.getValidDate(), requestParam.getValidDate())
+//                || !Objects.equals(oldLink.getOriginUrl(), requestParam.getOriginUrl())) {
+//            stringRedisTemplate.delete(LINK_GOTO_PRE_KEY + requestParam.getFullShortUrl());
+//            Date currentDate = new Date();
+//            if (oldLink.getValidDate() != null && oldLink.getValidDate().before(currentDate)) {
+//                if (Objects.equals(requestParam.getValidDateType(), ValidTypeEnum.FOREVER.getType()) || requestParam.getValidDate().after(currentDate)) {
+//                    stringRedisTemplate.delete(LINK_GOTO_IS_NULL_PRE_KEY + requestParam.getFullShortUrl());
+//                }
+//            }
+//        }
     }
 
     @Override

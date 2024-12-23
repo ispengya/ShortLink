@@ -7,31 +7,12 @@ import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.ispengya.shortlink.common.constant.MQConstant;
-import static com.ispengya.shortlink.common.constant.RedisConstant.LOCK_GID_UPDATE_KEY;
-import static com.ispengya.shortlink.common.constant.ShortLinkConstant.AMAP_REMOTE_URL;
 import com.ispengya.shortlink.common.exception.ServiceException;
+import com.ispengya.shortlink.common.mq.idempotent.MessageQueueIdempotentHandler;
 import com.ispengya.shortlink.common.util.JsonUtils;
 import com.ispengya.shortlink.project.dao.ShortLinkDao;
-import com.ispengya.shortlink.project.dao.ShortLinkGoToDao;
-import com.ispengya.shortlink.project.domain.LinkAccessLogsDO;
-import com.ispengya.shortlink.project.domain.LinkAccessStatsDO;
-import com.ispengya.shortlink.project.domain.LinkBrowserStatsDO;
-import com.ispengya.shortlink.project.domain.LinkDeviceStatsDO;
-import com.ispengya.shortlink.project.domain.LinkLocaleStatsDO;
-import com.ispengya.shortlink.project.domain.LinkNetworkStatsDO;
-import com.ispengya.shortlink.project.domain.LinkOsStatsDO;
-import com.ispengya.shortlink.project.domain.LinkStatsMQDTO;
-import com.ispengya.shortlink.project.domain.LinkStatsTodayDO;
-import com.ispengya.shortlink.project.domain.ShortLinkGotoDO;
-import com.ispengya.shortlink.project.mapper.LinkAccessLogsMapper;
-import com.ispengya.shortlink.project.mapper.LinkAccessStatsMapper;
-import com.ispengya.shortlink.project.mapper.LinkBrowserStatsMapper;
-import com.ispengya.shortlink.project.mapper.LinkDeviceStatsMapper;
-import com.ispengya.shortlink.project.mapper.LinkLocaleStatsMapper;
-import com.ispengya.shortlink.project.mapper.LinkNetworkStatsMapper;
-import com.ispengya.shortlink.project.mapper.LinkOsStatsMapper;
-import com.ispengya.shortlink.project.mapper.LinkStatsTodayMapper;
-import com.ispengya.shortlink.common.mq.idempotent.MessageQueueIdempotentHandler;
+import com.ispengya.shortlink.project.dao.ShortLinkStatsDao;
+import com.ispengya.shortlink.project.domain.*;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.MessageModel;
@@ -47,6 +28,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+import static com.ispengya.shortlink.common.constant.RedisConstant.LOCK_GID_UPDATE_KEY;
+import static com.ispengya.shortlink.common.constant.ShortLinkConstant.AMAP_REMOTE_URL;
+
 /**
  * @author ispengya
  * @date 2023/12/10 17:15
@@ -61,15 +45,7 @@ public class LinkStatsConsumer implements RocketMQListener<LinkStatsMQDTO> {
     private final MessageQueueIdempotentHandler messageQueueIdempotentHandler;
     private final RedissonClient redissonClient;
     private final ShortLinkDao shortLinkDao;
-    private final ShortLinkGoToDao shortLinkGoToDao;
-    private final LinkAccessStatsMapper linkAccessStatsMapper;
-    private final LinkLocaleStatsMapper linkLocaleStatsMapper;
-    private final LinkOsStatsMapper linkOsStatsMapper;
-    private final LinkBrowserStatsMapper linkBrowserStatsMapper;
-    private final LinkStatsTodayMapper linkStatsTodayMapper;
-    private final LinkAccessLogsMapper linkAccessLogsMapper;
-    private final LinkNetworkStatsMapper linkNetworkStatsMapper;
-    private final LinkDeviceStatsMapper linkDeviceStatsMapper;
+    private final ShortLinkStatsDao shortLinkStatsDao;
 
     @Override
     public void onMessage(LinkStatsMQDTO linkStatsMQDTO) {
@@ -96,17 +72,19 @@ public class LinkStatsConsumer implements RocketMQListener<LinkStatsMQDTO> {
     private void actualSaveShortLinkStats(LinkStatsMQDTO linkStatsMQDTO) {
         String fullShortUrl = linkStatsMQDTO.getFullShortUrl();
         //获取路由表username
-        ShortLinkGotoDO shortLinkGotoDO = shortLinkGoToDao.getByFullShortUrlWithOut(fullShortUrl);
-        if (Objects.isNull(shortLinkGotoDO)) {
+        //ShortLinkGotoDO shortLinkGotoDO = shortLinkGoToDao.getByFullShortUrlWithOut(fullShortUrl);
+        ShortLinkDO shortLinkDO = shortLinkDao.getOneByConditions(null, fullShortUrl);
+        if (Objects.isNull(shortLinkDO)) {
             throw new ServiceException("统计失败");
         }
         RReadWriteLock readWriteLock = redissonClient.getReadWriteLock(String.format(LOCK_GID_UPDATE_KEY, fullShortUrl));
         RLock rLock = readWriteLock.readLock();
         rLock.lock();
         try {
-            //更新总的统计数据
-            shortLinkDao.incrementStats(shortLinkGotoDO.getUsername(),fullShortUrl, 1, linkStatsMQDTO.getUvFirstFlag() ? 1 : 0,
+            //更新t_link的统计数据
+            shortLinkDao.incrementStats(shortLinkDO.getUsername(),fullShortUrl, 1, linkStatsMQDTO.getUvFirstFlag() ? 1 : 0,
                     linkStatsMQDTO.getUipFirstFlag() ? 1 : 0);
+
             //保存uv、pv等统计数据
             Date currentDate = linkStatsMQDTO.getCurrentDate();
             int hour = DateUtil.hour(currentDate, true);
@@ -121,7 +99,8 @@ public class LinkStatsConsumer implements RocketMQListener<LinkStatsMQDTO> {
                     .fullShortUrl(fullShortUrl)
                     .date(currentDate)
                     .build();
-            linkAccessStatsMapper.shortLinkStats(linkAccessStatsDO);
+            shortLinkStatsDao.shortLinkStats(linkAccessStatsDO);
+
             //保存位置统计数据
             Map<String, Object> localeParamMap = new HashMap<>();
             localeParamMap.put("key", linkStatsMQDTO.getStatsLocaleAmapKey());
@@ -143,36 +122,46 @@ public class LinkStatsConsumer implements RocketMQListener<LinkStatsMQDTO> {
                         .country("中国")
                         .date(currentDate)
                         .build();
-                linkLocaleStatsMapper.shortLinkLocaleState(linkLocaleStatsDO);
+                shortLinkStatsDao.shortLinkLocaleState(linkLocaleStatsDO);
             }
+
+            //记录操作系统
             LinkOsStatsDO linkOsStatsDO = LinkOsStatsDO.builder()
                     .os(linkStatsMQDTO.getOs())
                     .cnt(1)
                     .fullShortUrl(fullShortUrl)
                     .date(currentDate)
                     .build();
-            linkOsStatsMapper.shortLinkOsState(linkOsStatsDO);
+            shortLinkStatsDao.shortLinkOsState(linkOsStatsDO);
+
+            //记录浏览器
             LinkBrowserStatsDO linkBrowserStatsDO = LinkBrowserStatsDO.builder()
                     .browser(linkStatsMQDTO.getBrowser())
                     .cnt(1)
                     .fullShortUrl(fullShortUrl)
                     .date(currentDate)
                     .build();
-            linkBrowserStatsMapper.shortLinkBrowserState(linkBrowserStatsDO);
+            shortLinkStatsDao.shortLinkBrowserState(linkBrowserStatsDO);
+
+            //记录设备
             LinkDeviceStatsDO linkDeviceStatsDO = LinkDeviceStatsDO.builder()
                     .device(linkStatsMQDTO.getDevice())
                     .cnt(1)
                     .fullShortUrl(fullShortUrl)
                     .date(currentDate)
                     .build();
-            linkDeviceStatsMapper.shortLinkDeviceState(linkDeviceStatsDO);
+            shortLinkStatsDao.shortLinkDeviceState(linkDeviceStatsDO);
+
+            //记录网络
             LinkNetworkStatsDO linkNetworkStatsDO = LinkNetworkStatsDO.builder()
                     .network(linkStatsMQDTO.getNetwork())
                     .cnt(1)
                     .fullShortUrl(fullShortUrl)
                     .date(currentDate)
                     .build();
-            linkNetworkStatsMapper.shortLinkNetworkState(linkNetworkStatsDO);
+            shortLinkStatsDao.shortLinkNetworkState(linkNetworkStatsDO);
+
+            //记录访问日志
             LinkAccessLogsDO linkAccessLogsDO = LinkAccessLogsDO.builder()
                     .user(linkStatsMQDTO.getUv())
                     .ip(linkStatsMQDTO.getRemoteAddr())
@@ -183,7 +172,9 @@ public class LinkStatsConsumer implements RocketMQListener<LinkStatsMQDTO> {
                     .locale(StrUtil.join("-", "中国", actualProvince, actualCity))
                     .fullShortUrl(fullShortUrl)
                     .build();
-            linkAccessLogsMapper.insert(linkAccessLogsDO);
+            shortLinkStatsDao.shortLinkAccessLogState(linkAccessLogsDO);
+
+            //记录今日访问
             LinkStatsTodayDO linkStatsTodayDO = LinkStatsTodayDO.builder()
                     .todayPv(1)
                     .todayUv(linkStatsMQDTO.getUvFirstFlag() ? 1 : 0)
@@ -191,7 +182,7 @@ public class LinkStatsConsumer implements RocketMQListener<LinkStatsMQDTO> {
                     .fullShortUrl(fullShortUrl)
                     .date(currentDate)
                     .build();
-            linkStatsTodayMapper.shortLinkTodayState(linkStatsTodayDO);
+            shortLinkStatsDao.shortLinkTodayState(linkStatsTodayDO);
         } catch (Throwable ex) {
             log.error("短链接访问量统计异常", ex);
         } finally {
