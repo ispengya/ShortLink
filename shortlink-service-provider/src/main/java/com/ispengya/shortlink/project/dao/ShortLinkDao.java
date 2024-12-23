@@ -55,31 +55,41 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLinkDO> {
 
     public ShortLinkDO getOneInRecycle(String username, String fullShortUrl) {
         return lambdaQuery()
-                .eq(ShortLinkDO::getUsername, username)
+                //.eq(ShortLinkDO::getUsername, username)
                 .eq(ShortLinkDO::getShortUri, getShortUri(fullShortUrl))
                 .eq(ShortLinkDO::getEnableStatus, YesOrNoEnum.NO.getCode())
                 .eq(ShortLinkDO::getDelFlag, YesOrNoEnum.YES.getCode())
                 .one();
     }
 
+    /**
+     * 更新短链接
+     */
     public void updateByConditions(ShortLinkDO oldLink) {
         lambdaUpdate()
-                .eq(ShortLinkDO::getUsername, oldLink.getUsername())
+                //.eq(ShortLinkDO::getUsername, oldLink.getUsername())
                 .eq(ShortLinkDO::getShortUri, oldLink.getShortUri())
                 .eq(ShortLinkDO::getEnableStatus, YesOrNoEnum.YES.getCode())
                 .eq(ShortLinkDO::getDelFlag, YesOrNoEnum.YES.getCode())
                 .update(oldLink);
     }
 
+
+    /**
+     * 移入回收站
+     */
     public void saveRecycle(ShortLinkDO oldLink) {
         lambdaUpdate()
-                .eq(ShortLinkDO::getUsername, oldLink.getUsername())
+                //.eq(ShortLinkDO::getUsername, oldLink.getUsername())
                 .eq(ShortLinkDO::getShortUri, getShortUri(oldLink.getFullShortUrl()))
                 .eq(ShortLinkDO::getEnableStatus, YesOrNoEnum.YES.getCode())
                 .eq(ShortLinkDO::getDelFlag, YesOrNoEnum.YES.getCode())
                 .update(oldLink);
     }
 
+    /**
+     * 回收站恢复
+     */
     public void recoverInRecycle(ShortLinkDO oldLink) {
         lambdaUpdate()
                 .eq(ShortLinkDO::getUsername, oldLink.getUsername())
@@ -88,6 +98,9 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLinkDO> {
                 .update(oldLink);
     }
 
+    /**
+     * 回收站分页查询
+     */
     public IPage<ShortLinkDO> pageRecycleOfLink(RecycleBinPageParam reqDTO) {
         IPage<ShortLinkDO> page = new Page<>(reqDTO.getCurrent(), reqDTO.getSize());
         LambdaQueryWrapper<ShortLinkDO> queryWrapper = new LambdaQueryWrapper<>();
@@ -98,9 +111,12 @@ public class ShortLinkDao extends ServiceImpl<ShortLinkMapper, ShortLinkDO> {
         return shortLinkIPage;
     }
 
+    /**
+     * 删除短链接
+     */
     public void removeByConditions(RecycleBinRemoveParam reqDTO) {
         lambdaUpdate()
-                .eq(ShortLinkDO::getUsername, reqDTO.getUsername())
+                //.eq(ShortLinkDO::getUsername, reqDTO.getUsername())
                 .eq(ShortLinkDO::getShortUri, getShortUri(reqDTO.getFullShortUrl()))
                 .set(ShortLinkDO::getEnableStatus, YesOrNoEnum.NO.getCode())
                 .set(ShortLinkDO::getDelFlag, YesOrNoEnum.NO.getCode())

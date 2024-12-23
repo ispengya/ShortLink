@@ -10,7 +10,6 @@ import com.ispengya.shortlink.common.enums.YesOrNoEnum;
 import com.ispengya.shortlink.common.result.PageDTO;
 import com.ispengya.shortlink.common.util.RedisUtils;
 import com.ispengya.shortlink.project.dao.ShortLinkDao;
-import com.ispengya.shortlink.project.dao.ShortLinkGoToDao;
 import com.ispengya.shortlink.project.domain.ShortLinkDO;
 import com.ispengya.shortlink.project.dto.request.RecycleBinPageParam;
 import com.ispengya.shortlink.project.dto.request.RecycleBinRecoverParam;
@@ -43,7 +42,7 @@ public class RecycleBinDubboServiceImpl implements RecycleBinDubboService {
     @Value("${short-link.official.domain}")
     private String officialDomain;
     private final ShortLinkDao shortLinkDao;
-    private final ShortLinkGoToDao shortLinkGoToDao;
+    //private final ShortLinkGoToDao shortLinkGoToDao;
 
     @Override
     public void save(RecycleSaveParam reqDTO) {
@@ -52,9 +51,9 @@ public class RecycleBinDubboServiceImpl implements RecycleBinDubboService {
         shortLinkDO.setEnableStatus(YesOrNoEnum.NO.getCode());
         shortLinkDO.setUpdateTime(null);
         shortLinkDao.saveRecycle(shortLinkDO);
-        shortLinkGoToDao.updateStatus(reqDTO.getUsername(),reqDTO.getFullShortUrl(),YesOrNoEnum.NO);
+        //shortLinkGoToDao.updateStatus(reqDTO.getUsername(),reqDTO.getFullShortUrl(),YesOrNoEnum.NO);
         //删除redis缓存
-        RedisUtils.del(RedisConstant.LINK_GOTO_PRE_KEY+reqDTO.getFullShortUrl());
+        RedisUtils.del(RedisConstant.LINK_GOTO_PRE_KEY + reqDTO.getFullShortUrl());
     }
 
     @Override
@@ -74,7 +73,7 @@ public class RecycleBinDubboServiceImpl implements RecycleBinDubboService {
                         }
                         return shortLinkRespDTO;
                     }).collect(Collectors.toList());
-            PageDTO<ShortLinkRespDTO> pageDTO =new PageDTO<>();
+            PageDTO<ShortLinkRespDTO> pageDTO = new PageDTO<>();
             pageDTO.setRecords(shortLinkRespDTOS);
             pageDTO.setPages(linkPage.getPages());
             pageDTO.setSize(linkPage.getSize());
@@ -92,13 +91,24 @@ public class RecycleBinDubboServiceImpl implements RecycleBinDubboService {
         //否则自动填充更新字段不开启
         shortLinkDO.setUpdateTime(null);
         shortLinkDao.recoverInRecycle(shortLinkDO);
-        shortLinkGoToDao.updateStatus(reqDTO.getUsername(),reqDTO.getFullShortUrl(),YesOrNoEnum.YES);
+        //shortLinkGoToDao.updateStatus(reqDTO.getUsername(), reqDTO.getFullShortUrl(), YesOrNoEnum.YES);
         //缓存预热和删除缓存空值
         RedisUtils.del(RedisConstant.LINK_GOTO_IS_NULL_PRE_KEY + reqDTO.getFullShortUrl());
+
+        //如果恢复过期的短链接
+        if (LinkUtil.isExpireLink(shortLinkDO)) {
+            return;
+        }
+
         //判断有效期是否永久
         if (!Objects.equals(shortLinkDO.getValidDateType(), ValidTypeEnum.FOREVER.getType())) {
+            long linkCacheValidTime = LinkUtil.getLinkCacheValidTime(shortLinkDO.getValidDate());
+            //目的过期之前，缓存提前清除（定时扫描表，在即将过期之前删除缓存，需要结合redis过期键清除配置策略）
+            if (linkCacheValidTime > 12 * 60 * 60) {
+                linkCacheValidTime -= 6 * 60 * 60;
+            }
             RedisUtils.set(LINK_GOTO_PRE_KEY + reqDTO.getFullShortUrl(), shortLinkDO.getOriginUrl(),
-                    LinkUtil.getLinkCacheValidTime(shortLinkDO.getValidDate()), TimeUnit.MILLISECONDS
+                    linkCacheValidTime, TimeUnit.MILLISECONDS
             );
         } else {
             //在缓存过期默认一个月
@@ -111,6 +121,6 @@ public class RecycleBinDubboServiceImpl implements RecycleBinDubboService {
         shortLinkDao.removeByConditions(reqDTO);
         //TODO 删除路由表
         //删除缓存
-        RedisUtils.del(RedisConstant.LINK_GOTO_PRE_KEY+reqDTO.getFullShortUrl());
+        RedisUtils.del(RedisConstant.LINK_GOTO_PRE_KEY + reqDTO.getFullShortUrl());
     }
 }

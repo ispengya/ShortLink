@@ -59,6 +59,7 @@ public interface ShortLinkDubboService {
      * @param shortLinkUpdateParam
      */
     void updateShortLink(ShortLinkUpdateParam shortLinkUpdateParam);
+    void updateShortLinkV2(ShortLinkUpdateParam requestParam);
 
     /**
      * 分页查询短链接

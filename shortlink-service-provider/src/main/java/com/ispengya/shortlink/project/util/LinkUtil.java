@@ -2,9 +2,12 @@ package com.ispengya.shortlink.project.util;
 
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
+import com.ispengya.shortlink.common.enums.ValidTypeEnum;
+import com.ispengya.shortlink.project.domain.ShortLinkDO;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.ispengya.shortlink.common.constant.ShortLinkConstant.DEFAULT_CACHE_VALID_TIME;
@@ -21,6 +24,14 @@ public class LinkUtil {
         return Optional.ofNullable(validDate)
                 .map(each -> DateUtil.between(new Date(), each, DateUnit.SECOND))
                 .orElse(DEFAULT_CACHE_VALID_TIME);
+    }
+
+    public static boolean isExpireLink(ShortLinkDO linkDO) {
+        if (Objects.equals(linkDO.getValidDateType(), ValidTypeEnum.FOREVER.getType())) {
+            return false;
+        }
+        Date now = new Date();
+        return !linkDO.getValidDate().after(now);
     }
 
     /**

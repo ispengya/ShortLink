@@ -60,7 +60,7 @@ public class ShortLinkController {
     @PostMapping("/update")
     public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateParam shortLinkUpdateParam){
         shortLinkUpdateParam.setUsername(UserContext.getUsername());
-        shortLinkDubboService.updateShortLink(shortLinkUpdateParam);
+        shortLinkDubboService.updateShortLinkV2(shortLinkUpdateParam);
         return Results.success();
     }
 

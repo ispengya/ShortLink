@@ -103,16 +103,21 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
 
                     //load db
                     ShortLinkDO linkDO = shortLinkDao.getOneByConditions(null, fullShortUrl);
-                    if (linkDO == null) {
+                    if (linkDO == null || LinkUtil.isExpireLink(linkDO)) {
                         stringRedisTemplate.opsForValue().set(LINK_GOTO_IS_NULL_PRE_KEY + fullShortUrl, "null");
                         ((HttpServletResponse) response).sendRedirect("/page/notfound");
                         return;
                     }
 
-                    //判断有效期是否永久
+                    //判断有效期是否永久，设置缓存
                     if (!Objects.equals(linkDO.getValidDateType(), ValidTypeEnum.FOREVER.getType())) {
+                        long linkCacheValidTime = LinkUtil.getLinkCacheValidTime(linkDO.getValidDate());
+                        //目的过期之前，缓存提前清除（定时扫描表，在即将过期之前删除缓存，需要结合redis过期键清除配置策略）
+                        if (linkCacheValidTime > 12 * 60 * 60) {
+                            linkCacheValidTime -= 6 * 60 * 60;
+                        }
                         stringRedisTemplate.opsForValue().set(LINK_GOTO_PRE_KEY + fullShortUrl, linkDO.getOriginUrl(),
-                                LinkUtil.getLinkCacheValidTime(linkDO.getValidDate()), TimeUnit.MILLISECONDS
+                                linkCacheValidTime, TimeUnit.MILLISECONDS
                         );
                     } else {
                         //在缓存过期默认一个月
@@ -133,7 +138,6 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
             ((HttpServletResponse) response).sendRedirect("/page/notfound");
         }
     }
-
 
     @Override
     public ShortLinkCreateRespDTO createLink(ShortLinkCreateParam shortLinkCreateParam) {
@@ -231,10 +235,47 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
 
     @Override
     @Transactional
+    public void updateShortLinkV2(ShortLinkUpdateParam requestParam){
+        //查询短链接
+        ShortLinkDO oldLink = shortLinkDao.getOneByConditions(requestParam.getUsername(), requestParam.getFullShortUrl());
+        AssertUtil.notNull(oldLink, "短链接不存在");
+
+        //获取旧值
+        Integer validDateType = oldLink.getValidDateType();
+        Date validDate = oldLink.getValidDate();
+        String originUrl = oldLink.getOriginUrl();
+
+        //更新新值
+        oldLink.setOriginUrl(requestParam.getOriginUrl());
+        oldLink.setGid(requestParam.getGid());
+        oldLink.setValidDateType(requestParam.getValidDateType());
+        oldLink.setValidDate(requestParam.getValidDate());
+        oldLink.setDescribe(requestParam.getDescribe());
+        shortLinkDao.updateByConditions(oldLink);
+
+        //三个字段更新，缓存更新
+        if (!Objects.equals(validDateType, requestParam.getValidDateType())
+                || !Objects.equals(validDate, requestParam.getValidDate())
+                || !Objects.equals(originUrl, requestParam.getOriginUrl())) {
+            stringRedisTemplate.delete(LINK_GOTO_PRE_KEY + requestParam.getFullShortUrl());
+            Date currentDate = new Date();
+            if (validDate != null && validDate.before(currentDate)) {
+                //链接原本是一个自定义时间的，过期之后进行更新，如果在这期间进行查找，就会出现缓存空值情况
+                if (Objects.equals(requestParam.getValidDateType(), ValidTypeEnum.FOREVER.getType()) || requestParam.getValidDate().after(currentDate)) {
+                    stringRedisTemplate.delete(LINK_GOTO_IS_NULL_PRE_KEY + requestParam.getFullShortUrl());
+                }
+            }
+        }
+    }
+
+    @Override
+    @Transactional
     public void updateShortLink(ShortLinkUpdateParam requestParam) {
         //查询更改的短链接
         ShortLinkDO oldLink = shortLinkDao.getOneByConditions(requestParam.getUsername(), requestParam.getFullShortUrl());
         AssertUtil.notNull(oldLink, "短链接不存在");
+
+        //分组是否变更
         if (Objects.equals(oldLink.getGid(), requestParam.getGid())) {
             ShortLinkDO shortLinkDO = new ShortLinkDO();
             BeanUtils.copyProperties(oldLink, shortLinkDO);
@@ -245,7 +286,7 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
             shortLinkDao.save(shortLinkDO);
             shortLinkDao.delete(oldLink);
         } else {
-            // 为什么监控表要加上Gid？不加的话是否就不存在读写锁？详情查看：https://nageoffer.com/shortlink/question
+            // 为什么分组变更要加锁，
             RReadWriteLock
                     readWriteLock = redissonClient.getReadWriteLock(String.format(RedisConstant.LOCK_GID_UPDATE_KEY,
                     requestParam.getFullShortUrl()));
@@ -413,6 +454,4 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
         }
         return shorUri;
     }
-
-
 }
