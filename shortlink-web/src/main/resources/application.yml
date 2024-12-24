@@ -31,7 +31,17 @@ spring:
 logging:
   config: classpath:log4j2-spring.xml
 
+
 zipkin:
   base:
     url: http://127.0.0.1:9411/api/v2/spans
   enable: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  metrics:
+    tags:
+      application: ${spring.application.name}
