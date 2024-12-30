@@ -87,7 +87,7 @@ public class ShortLinkController {
      * 批量创建短链接
      */
     @SneakyThrows
-    @PostMapping("/api/short-link/admin/v1/create/batch")
+    @PostMapping("/create/batch")
     public void batchCreateShortLink(@RequestBody ShortLinkBatchCreateParam requestParam, HttpServletResponse response) {
         ShortLinkBatchCreateRespDTO shortLinkBatchCreateRespDTO =
                 shortLinkDubboService.batchCreateShortLink(requestParam);

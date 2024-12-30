@@ -35,7 +35,7 @@ public class UserInfoRespDTO implements Serializable {
     /**
      * 手机号
      */
-    @JsonSerialize(using = PhoneSerializer.class)
+//    @JsonSerialize(using = PhoneSerializer.class)
     private String phone;
 
     /**

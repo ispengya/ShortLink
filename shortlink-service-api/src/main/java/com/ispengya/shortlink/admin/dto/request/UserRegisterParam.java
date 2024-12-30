@@ -34,4 +34,9 @@ public class UserRegisterParam implements Serializable {
      */
     @NotBlank
     private String phone;
+
+    /**
+     * 邮件
+     */
+    private String mail;
 }

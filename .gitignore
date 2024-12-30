@@ -13,7 +13,7 @@ target/
 .sts4-cache
 
 **/application-prod.properties
-
+/logs/**
 ### IntelliJ IDEA ###
 .idea
 !/.idea/icon.png

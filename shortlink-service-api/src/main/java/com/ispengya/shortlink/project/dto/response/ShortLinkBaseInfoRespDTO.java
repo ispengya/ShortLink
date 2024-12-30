@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * 短链接基础信息响应参数
  */
@@ -12,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ShortLinkBaseInfoRespDTO {
+public class ShortLinkBaseInfoRespDTO implements Serializable {
 
     /**
      * 描述信息

@@ -93,7 +93,7 @@ public class RecycleBinDubboServiceImpl implements RecycleBinDubboService {
         shortLinkDao.recoverInRecycle(shortLinkDO);
         //shortLinkGoToDao.updateStatus(reqDTO.getUsername(), reqDTO.getFullShortUrl(), YesOrNoEnum.YES);
         //缓存预热和删除缓存空值
-        RedisUtils.del(RedisConstant.LINK_GOTO_IS_NULL_PRE_KEY + reqDTO.getFullShortUrl());
+        RedisUtils.del(RedisConstant.LINK_GOTO_IS_NULL_PRE_KEY + removeHttpPrefix(reqDTO.getFullShortUrl()));
 
         //如果恢复过期的短链接
         if (LinkUtil.isExpireLink(shortLinkDO)) {
@@ -122,5 +122,32 @@ public class RecycleBinDubboServiceImpl implements RecycleBinDubboService {
         //TODO 删除路由表
         //删除缓存
         RedisUtils.del(RedisConstant.LINK_GOTO_PRE_KEY + reqDTO.getFullShortUrl());
+    }
+
+    /**
+     * 去掉 URL 的 http:// 或 https:// 前缀
+     */
+    public static String removeHttpPrefix(String url) {
+        if (url == null || url.isEmpty()) {
+            return url;
+        }
+
+        if (url.startsWith("http://")) {
+            return url.substring(7); // 去掉 "http://"
+        } else if (url.startsWith("https://")) {
+            return url.substring(8); // 去掉 "https://"
+        }
+
+        return url; // 没有前缀，返回原始字符串
+    }
+
+    public static void main(String[] args) {
+        // 测试用例
+        System.out.println(removeHttpPrefix("http://example.com"));  // 输出: example.com
+        System.out.println(removeHttpPrefix("https://example.com")); // 输出: example.com
+        System.out.println(removeHttpPrefix("ftp://example.com"));   // 输出: ftp://example.com
+        System.out.println(removeHttpPrefix(null));                  // 输出: null
+        System.out.println(removeHttpPrefix(""));                    // 输出:
+        System.out.println(removeHttpPrefix("example.com"));
     }
 }

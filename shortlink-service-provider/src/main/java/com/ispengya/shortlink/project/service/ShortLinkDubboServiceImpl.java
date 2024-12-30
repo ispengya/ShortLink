@@ -7,6 +7,7 @@ import cn.hutool.core.text.StrBuilder;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.ispengya.shortlink.common.algorithm.link.GenerateService;
+import com.ispengya.shortlink.common.biz.user.UserContext;
 import com.ispengya.shortlink.common.constant.ShortLinkConstant;
 import com.ispengya.shortlink.common.converter.BeanConverter;
 import com.ispengya.shortlink.common.converter.ShortLinkConverter;
@@ -395,7 +396,9 @@ public class ShortLinkDubboServiceImpl implements ShortLinkDubboService {
         for (int i = 0; i < originUrls.size(); i++) {
             ShortLinkCreateParam shortLinkCreateReqDTO = BeanUtil.toBean(requestParam, ShortLinkCreateParam.class);
             shortLinkCreateReqDTO.setOriginUrl(originUrls.get(i));
+            shortLinkCreateReqDTO.setUsername(UserContext.getUsername());
             shortLinkCreateReqDTO.setDescribe(describes.get(i));
+            shortLinkCreateReqDTO.setDomain(officialDomain);
             try {
                 ShortLinkCreateRespDTO shortLink = createLink(shortLinkCreateReqDTO);
                 ShortLinkBaseInfoRespDTO linkBaseInfoRespDTO = ShortLinkBaseInfoRespDTO.builder()

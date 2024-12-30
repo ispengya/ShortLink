@@ -3,6 +3,7 @@ package com.ispengya.shortlink.project.dto.request;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
@@ -10,7 +11,7 @@ import java.util.List;
  * 短链接批量创建请求对象
  */
 @Data
-public class ShortLinkBatchCreateParam {
+public class ShortLinkBatchCreateParam implements Serializable {
 
     /**
      * 原始链接集合

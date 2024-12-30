@@ -66,8 +66,8 @@ logging:
 
 zipkin:
   base:
-    url: http://127.0.0.1:9411/api/v2/spans
-  enable: true
+    url: ${link.zipkin.url}
+  enable: ${link.zipkin.open}
 
 management:
   endpoints:
